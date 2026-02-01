@@ -3,6 +3,7 @@
 #   CLOUDFLARE_API_TOKEN（必填）- Cloudflare API Token，權限：Account / Cloudflare Pages / Edit
 #   CLOUDFLARE_ACCOUNT_ID（必填）- Cloudflare 帳號 ID
 #   VITE_API_URL（選填）- 生產環境後端 API 網址
+# 若出現「Project not found」，請在本機執行一次：npx wrangler login 後再 npm run deploy，於提示時建立專案 hua-diamond-info
 
 name: Deploy to Cloudflare Pages
 
@@ -26,6 +27,12 @@ jobs:
           node-version: "20"
           cache: "npm"
 
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then echo "::error::CLOUDFLARE_API_TOKEN 未設定，請到 Settings → Secrets and variables → Actions 新增"; exit 1; fi
+          if [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then echo "::error::CLOUDFLARE_ACCOUNT_ID 未設定，請到 Settings → Secrets and variables → Actions 新增"; exit 1; fi
+          echo "Secrets 已設定"
+
       - name: Install dependencies
         run: npm ci
 
@@ -35,9 +42,9 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=hua-diamond-info
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler --version
+          npx wrangler pages deploy dist --project-name=hua-diamond-info

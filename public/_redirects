@@ -1,0 +1,2 @@
+# SPA：所有路徑都回傳 index.html，由 React Router 處理
+/*    /index.html   200

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ModularStarter Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 24px; background: #f8fafc; color: #1e293b; line-height: 1.5; }
+    h1 { font-size: 1.25rem; margin: 0 0 16px; }
+    #app { max-width: 480px; }
+    .demo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+    .demo-actions input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; flex: 1; min-width: 120px; }
+    .demo-actions button { padding: 8px 14px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: #3b82f6; color: #fff; }
+    .demo-actions button:hover { background: #2563eb; }
+    .demo-actions button#demo-reload { background: #64748b; }
+    .demo-actions button#demo-reload:hover { background: #475569; }
+    .demo-root { min-height: 80px; }
+    .demo-list { display: flex; flex-direction: column; gap: 6px; }
+    .demo-item { padding: 10px 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
+    .demo-empty { color: #94a3b8; font-size: 14px; margin: 0; }
+    .demo-error { padding: 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; color: #b91c1c; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>ModularStarter Demo</h1>
+  <div id="app">
+    <div class="demo-actions">
+      <input id="demo-input" type="text" placeholder="新增項目文字" />
+      <button type="button" id="demo-add">新增</button>
+      <button type="button" id="demo-reload">重新載入</button>
+    </div>
+    <div class="demo-root"></div>
+  </div>
+
+  <!-- 載入順序：core → utils → data → features → ui -->
+  <script src="core/config.js"></script>
+  <script src="core/constants.js"></script>
+  <script src="core/app-init.js"></script>
+  <script src="utils/utils.js"></script>
+  <script src="utils/validators.js"></script>
+  <script src="utils/notifications.js"></script>
+  <script src="data/cache.js"></script>
+  <script src="data/api-client.js"></script>
+  <script src="data/app-api.js"></script>
+  <script src="features/demo/demo-funcs.js"></script>
+  <script src="features/demo/demo-main.js"></script>
+  <script src="ui/ui.js"></script>
+  <script src="ui/events.js"></script>
+</body>
+</html>

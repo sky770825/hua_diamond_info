@@ -1,6 +1,6 @@
-// 開發時 VITE_API_URL 留空：走 Vite proxy 同源請求，避免 CORS
-// 生產時若未設定 VITE_API_URL：改用靜態 members.json（Cloudflare Pages 無後端）
-const raw = import.meta.env.VITE_API_URL;
+// 開發時 API_URL 留空：走 Vite proxy 同源請求
+// 生產時若未設定 API_URL：改用靜態 members.json
+const raw = import.meta.env.API_URL ?? "";
 const API_BASE =
   raw === undefined || raw === "" ? "" : String(raw).replace(/\/$/, "");
 const USE_STATIC_MEMBERS =

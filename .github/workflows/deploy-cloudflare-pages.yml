@@ -27,4 +27,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          # 支援 API_URL / ADMIN_URL 或 VITE_*（舊版相容）
+          API_URL: ${{ secrets.API_URL }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          ADMIN_URL: ${{ secrets.ADMIN_URL }}
+          VITE_ADMIN_URL: ${{ secrets.VITE_ADMIN_URL }}

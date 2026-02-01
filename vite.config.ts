@@ -4,7 +4,16 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
+// 支援 API_URL / ADMIN_URL（不用 VITE_ 前綴），或 VITE_API_URL / VITE_ADMIN_URL
 export default defineConfig(({ mode }) => ({
+  define: {
+    "import.meta.env.API_URL": JSON.stringify(
+      process.env.API_URL || process.env.VITE_API_URL || ""
+    ),
+    "import.meta.env.ADMIN_URL": JSON.stringify(
+      process.env.ADMIN_URL || process.env.VITE_ADMIN_URL || ""
+    ),
+  },
   server: {
     host: "::",
     port: 8080,

@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-// 完整管理後台網址：生產環境必須設 VITE_ADMIN_URL；開發時用 localhost
-const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "";
+// 完整管理後台網址：生產環境設 ADMIN_URL；開發時用 localhost
+const ADMIN_URL = import.meta.env.ADMIN_URL || "";
 const IS_DEV = import.meta.env.DEV;
 
 const AdminPage = () => {
@@ -15,6 +15,7 @@ const AdminPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "管理後台｜資訊組";
     if (ADMIN_URL) {
       window.location.href = `${ADMIN_URL}/admin`;
       return;
@@ -82,8 +83,16 @@ const AdminPage = () => {
           ) : (
             <p className="mt-2">
               完整編輯功能需將後端部署至 Zeabur 等服務，並在 Cloudflare Pages 設定{" "}
-              <code className="rounded bg-secondary/50 px-1">VITE_ADMIN_URL</code>。
-              詳見 docs/完整管理後台部署說明.md。
+              <code className="rounded bg-secondary/50 px-1">ADMIN_URL</code>。
+              {" "}
+              <a
+                href="https://github.com/sky770825/hua_diamond_info/blob/main/docs/完整管理後台部署說明.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                → 部署說明
+              </a>
             </p>
           )}
         </div>

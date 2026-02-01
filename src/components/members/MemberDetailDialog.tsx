@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Member } from "@/data/types";
 import { portfolioImageUrl } from "@/api/images";
 import {
@@ -34,7 +35,10 @@ function initials(name: string): string {
     .toUpperCase() || "?";
 }
 
+type LightboxItem = { src: string; title?: string; description?: string };
+
 const MemberDetailDialog = ({ member, open, onOpenChange, onShare }: MemberDetailDialogProps) => {
+  const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
   if (!member) return null;
   const portfolio = member.portfolio ?? [];
   const c = member.contact;
@@ -149,31 +153,39 @@ const MemberDetailDialog = ({ member, open, onOpenChange, onShare }: MemberDetai
             </div>
             {portfolio.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {portfolio.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-xl overflow-hidden bg-secondary/30 border border-border/50"
-                  >
-                    <div className="aspect-square">
-                      <img
-                        src={portfolioImageUrl(item.image)}
-                        alt={item.title ? `${member.name} 的作品：${item.title}` : `${member.name} 的作品`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                {portfolio.map((item) => {
+                  const src = portfolioImageUrl(item.image);
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-xl overflow-hidden bg-secondary/30 border border-border/50"
+                    >
+                      <button
+                        type="button"
+                        className="aspect-square w-full block cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-b-none overflow-hidden"
+                        onClick={() => src && setLightbox({ src, title: item.title, description: item.description })}
+                        aria-label={item.title ? `放大：${item.title}` : "放大作品圖片"}
+                      >
+                        <img
+                          src={src}
+                          alt={item.title ? `${member.name} 的作品：${item.title}` : `${member.name} 的作品`}
+                          className="w-full h-full object-cover hover:opacity-95 transition-opacity"
+                          loading="lazy"
+                        />
+                      </button>
+                      <div className="p-2.5">
+                        {item.title && (
+                          <p className="text-sm font-medium text-foreground line-clamp-1">{item.title}</p>
+                        )}
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="p-2.5">
-                      {item.title && (
-                        <p className="text-sm font-medium text-foreground line-clamp-1">{item.title}</p>
-                      )}
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-xl border-2 border-dashed border-border bg-secondary/20 flex flex-col items-center justify-center py-8 gap-2">
@@ -184,6 +196,30 @@ const MemberDetailDialog = ({ member, open, onOpenChange, onShare }: MemberDetai
           </section>
         </div>
       </DialogContent>
+
+      {/* 作品集圖片放大（lightbox） */}
+      <Dialog open={lightbox !== null} onOpenChange={(open) => !open && setLightbox(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-3 p-3 sm:p-4 bg-black/95 border-border">
+          {lightbox && (
+            <>
+              <div className="flex-1 min-h-0 flex items-center justify-center">
+                <img
+                  src={lightbox.src}
+                  alt={lightbox.title ?? "作品圖片"}
+                  className="max-w-full max-h-[75vh] w-auto h-auto object-contain rounded-lg"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              {(lightbox.title || lightbox.description) && (
+                <div className="text-center space-y-1 text-sm text-muted-foreground border-t border-border/50 pt-3">
+                  {lightbox.title && <p className="font-medium text-foreground">{lightbox.title}</p>}
+                  {lightbox.description && <p className="text-muted-foreground">{lightbox.description}</p>}
+                </div>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

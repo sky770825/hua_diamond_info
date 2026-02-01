@@ -56,7 +56,7 @@ npm install
 npm run dev
 ```
 
-- API 預設：**http://localhost:3000**
+- API 預設：**http://localhost:3001**
 - 詳見 [`backend/README.md`](backend/README.md)
 
 ---
@@ -82,7 +82,7 @@ cp .env.example .env
 
 | 變數 | 說明 |
 |------|------|
-| `VITE_API_URL` | 後端 API 根網址，例如 `http://localhost:3000`。未設定時預設 `http://localhost:3000` |
+| `VITE_API_URL` | 後端 API 根網址，例如 `http://localhost:3001`。未設定時開發環境走 Vite proxy |
 
 ---
 
@@ -97,7 +97,7 @@ cp .env.example .env
 2. 終端二：根目錄 `npm install && npm run dev`
 
 - **前端（唯讀）**：http://localhost:8080（可點「重新整理」重抓列表）
-- **後端管理（編輯）**：http://localhost:3000/admin
+- **後端管理（編輯）**：http://localhost:3001/admin
 
 ### 前端僅靜態建置
 

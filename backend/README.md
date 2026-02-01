@@ -15,11 +15,11 @@ npm install
 npm run dev
 ```
 
-API 預設運行於 **http://localhost:3000**。可設 `PORT` 改變埠號。
+API 預設運行於 **http://localhost:3001**。可設 `PORT` 改變埠號。
 
 ## 管理後台（編輯用）
 
-- **http://localhost:3000/admin** （或 `/admin.html`）
+- **http://localhost:3001/admin** （或 `/admin.html`）
 - 功能：**新增成員**（含聯絡方式）、**編輯成員**（姓名、標籤、需求、服務、聯絡）、**刪除成員**、上傳／移除形象照、**新增作品**（卡片式）、刪除作品
 - 僅後端提供編輯；前端為唯讀展示。
 

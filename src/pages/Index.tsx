@@ -112,7 +112,7 @@ const Index = () => {
         <p className="text-destructive font-medium">載入失敗</p>
         <p className="text-muted-foreground text-sm text-center">{error}</p>
         <p className="text-muted-foreground text-sm">
-          請確認後端 API 已啟動（預設 http://localhost:3000）
+          請確認後端 API 已啟動（預設 http://localhost:3001）
         </p>
         <RefreshButton
           onClick={loadMembers}

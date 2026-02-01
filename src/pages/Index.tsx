@@ -24,7 +24,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Search, Users, Filter, Calendar, UsersRound, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Filter, UsersRound, ChevronDown, ChevronUp } from "lucide-react";
 
 const SORT_OPTIONS: { value: MemberSortBy; label: string }[] = [
   { value: "name", label: "姓名" },
@@ -33,6 +33,11 @@ const SORT_OPTIONS: { value: MemberSortBy; label: string }[] = [
 ];
 
 const SKELETON_COUNT = 6;
+
+// 管理後台網址：VITE_ADMIN_URL 有設定則用；開發時用 localhost:3001
+const ADMIN_URL =
+  import.meta.env.VITE_ADMIN_URL ||
+  (import.meta.env.DEV ? "http://localhost:3001" : "");
 
 const Index = () => {
   const { toast } = useToast();
@@ -99,12 +104,6 @@ const Index = () => {
       setDetailOpen(true);
     }
   }, [members, searchParams]);
-
-  const today = new Date().toLocaleDateString("zh-TW", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 
   if (error) {
     return (
@@ -260,9 +259,14 @@ const Index = () => {
               <UsersRound className="w-7 h-7 sm:w-8 sm:h-8 text-muted-foreground" />
             </div>
             <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">尚無成員</h3>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-[65ch]">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-[65ch] mb-4">
               成員資料由後台維護，請至管理後台新增成員後再瀏覽。
             </p>
+            <Button asChild variant="outline" className="min-h-[48px] px-6">
+              <a href={ADMIN_URL ? `${ADMIN_URL}/admin` : "/admin"} {...(ADMIN_URL ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                開啟管理後台
+              </a>
+            </Button>
           </div>
         ) : showSkeleton ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
@@ -320,50 +324,20 @@ const Index = () => {
         )}
       </main>
 
-      {!showEmptyMembers && (
-        <footer className="border-t border-border bg-secondary/20 no-print">
-          <div className="container py-4 sm:py-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 text-sm">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>
-                    共 <span className="text-foreground font-medium">{members.length}</span> 位成員
-                    {hasFilters && (
-                      <span className="text-primary">，顯示 {sortedMembers.length} 位</span>
-                    )}
-                  </span>
-                </div>
-                {(debouncedSearch || selectedTags.length > 0) && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Filter className="w-4 h-4" />
-                    <span>
-                      {debouncedSearch && (
-                        <span>
-                          搜尋：<span className="text-primary">「{debouncedSearch}」</span>
-                        </span>
-                      )}
-                      {debouncedSearch && selectedTags.length > 0 && "、"}
-                      {selectedTags.length > 0 && (
-                        <span>
-                          標籤：<span className="text-primary">{selectedTags.join("、")}</span>
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>最後更新：{today}</span>
-              </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground text-center md:text-right">
-              2026 華地產鑽石分會 資訊組 蔡濬瑒
-            </div>
+      <footer className="border-t border-border bg-secondary/20 no-print">
+        <div className="container py-4 sm:py-6">
+          <div className="text-center text-sm text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+            <span>2026 華地產鑽石分會資訊組 蔡濬瑒製</span>
+            <a
+              href={ADMIN_URL ? `${ADMIN_URL}/admin` : "/admin"}
+              {...(ADMIN_URL ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              className="text-primary hover:underline"
+            >
+              管理後台
+            </a>
           </div>
-        </footer>
-      )}
+        </div>
+      </footer>
 
       <MemberDetailDialog
         member={selectedMember}

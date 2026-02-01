@@ -152,15 +152,24 @@
     <div class="loading">載入中…</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Supabase 設定（與前端 .env 一致，anon key 可公開）
-    const SUPABASE_URL = window.__SUPABASE_URL__ || "https://cnzqtuuegdqwkgvletaa.supabase.co";
-    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuenF0dXVlZ2Rxd2tndmxldGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjUxMTksImV4cCI6MjA4MzcwMTExOX0.gsO3RKdMu2bUXW4b5aHseouIkjXtJyIqqP_0x3Y6trE";
-    const { createClient } = window.supabase || {};
-    const sb = typeof createClient === "function" ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  <script type="module">
+    (async function() {
+      const root = document.getElementById("root");
+      function showInitError(msg) {
+        if (!root) return;
+        const safe = (msg ?? "").toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        root.innerHTML = '<div class="error">初始化失敗：' + safe + '</div><div class="load-failed"><button type="button" class="btn btn-primary" data-retry>重試</button></div>';
+        const btn = document.querySelector("[data-retry]");
+        if (btn) btn.addEventListener("click", () => location.reload());
+      }
+      try {
+        // 使用 ESM 動態載入，避免 CDN UMD 的全域 supabase 與本頁衝突
+        const SUPABASE_URL = window.__SUPABASE_URL__ || "https://cnzqtuuegdqwkgvletaa.supabase.co";
+        const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuenF0dXVlZ2Rxd2tndmxldGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjUxMTksImV4cCI6MjA4MzcwMTExOX0.gsO3RKdMu2bUXW4b5aHseouIkjXtJyIqqP_0x3Y6trE";
+        const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+        const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const BUCKET = "hua-diamond-images";
+        const BUCKET = "hua-diamond-images";
 
     function rowToMember(row) {
       return {
@@ -271,7 +280,7 @@
       if (!img) return "";
       if (img.startsWith("http") || img.startsWith("data:")) return img;
       if (img.startsWith("/api/")) return "";
-      return (API || "") + (img.startsWith("/") ? img : "/" + img);
+      return "";
     }
 
     function escapeHtml(s) {
@@ -282,16 +291,24 @@
 
     async function load() {
       const root = document.getElementById("root");
+      if (!root) return;
+      const showError = (msg) => {
+        root.innerHTML = `
+          <div class="error">${escapeHtml(msg)}</div>
+          <div class="load-failed"><button type="button" class="btn btn-primary" data-retry>重試</button></div>
+        `;
+        const btn = document.querySelector("[data-retry]");
+        if (btn) btn.addEventListener("click", load);
+      };
       try {
-        const members = await api("/api/members");
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("載入逾時（請檢查網路或 Supabase 設定）")), 15000)
+        );
+        const members = await Promise.race([api("/api/members"), timeout]);
         root.innerHTML = members.map(m => renderMember(m)).join("");
         bind();
       } catch (e) {
-        root.innerHTML = `
-          <div class="error">載入失敗：${escapeHtml((e && e.message) || String(e))}</div>
-          <div class="load-failed"><button type="button" class="btn btn-primary" data-retry>重試</button></div>
-        `;
-        document.querySelector("[data-retry]")?.addEventListener("click", load);
+        showError("載入失敗：" + ((e && e.message) || String(e)));
       }
     }
 
@@ -299,7 +316,7 @@
       const port = m.portfolio || [];
       const portHtml = port.length
         ? `<div class="portfolio-grid">${port.map(p => `
-          <div class="portfolio-card" data-member="${m.no}" data-id="${p.id}">
+          <div class="portfolio-card" data-member="${escapeHtml(m.no)}" data-id="${escapeHtml(p.id)}">
             <img class="thumb" src="${portfolioImageUrl(p.image)}" alt="${escapeHtml(p.title || "作品")}" />
             <div class="body">
               ${p.title ? `<div class="tit">${escapeHtml(p.title)}</div>` : ""}
@@ -664,8 +681,12 @@
       });
     }
 
-    initAddMember();
-    load();
+        initAddMember();
+        load();
+      } catch (e) {
+        showInitError((e && e.message) || String(e));
+      }
+    })();
   </script>
 </body>
 </html>

@@ -174,6 +174,9 @@
 
         const BUCKET = "hua-diamond-images";
 
+    function sortByNo(list) {
+      return list.slice().sort((a, b) => String(a.no).localeCompare(String(b.no), undefined, { numeric: true }));
+    }
     function rowToMember(row) {
       return {
         no: row.no,
@@ -197,17 +200,17 @@
           sb.from("hua_member_portfolios").select("*").order("sort_order"),
         ]);
         if (membersRes.error) throw new Error(membersRes.error.message);
-        const rows = membersRes.data || [];
+        const rows = (membersRes.data || []).filter(r => r.no != null);
         const portfolios = portfoliosRes.data || [];
         const byNo = {};
         rows.forEach(r => { byNo[r.no] = { ...r, portfolios: [] }; });
         portfolios.forEach(p => { if (byNo[p.member_no]) byNo[p.member_no].portfolios.push(p); });
-        return Object.values(byNo).map(rowToMember);
+        return sortByNo(Object.values(byNo).map(rowToMember));
       }
       if (path === "/api/members-only" && method === "GET") {
         const { data: rows, error } = await sb.from("hua_members").select("*").order("no");
         if (error) throw new Error(error.message);
-        return (rows || []).map(r => rowToMember({ ...r, portfolios: [] }));
+        return sortByNo((rows || []).filter(r => r.no != null).map(r => rowToMember({ ...r, portfolios: [] })));
       }
       if (path === "/api/portfolios-only" && method === "GET") {
         const { data: list, error } = await sb.from("hua_member_portfolios").select("*").order("sort_order");
@@ -332,23 +335,25 @@
               if (raw) {
                 const { members: m, ts } = JSON.parse(raw);
                 if (m && Array.isArray(m) && ts && (Date.now() - ts) < CACHE_TTL_MS) {
-                  root.innerHTML = m.map(mem => renderMember(mem)).join("");
+                  const sorted = sortByNo(m);
+                  root.innerHTML = sorted.map(mem => renderMember(mem)).join("");
                   bind();
                 }
               }
             } catch (_) {}
           }
           const membersOnly = await api("/api/members-only");
-          root.innerHTML = membersOnly.map(m => renderMember(m)).join("");
+          const validMembers = Array.isArray(membersOnly) ? membersOnly.filter(m => m && m.no != null) : [];
+          root.innerHTML = validMembers.map(m => renderMember(m)).join("");
           bind();
           const portfoliosOnly = await api("/api/portfolios-only");
           const byNo = {};
-          membersOnly.forEach(m => { byNo[m.no] = { ...m, portfolio: [] }; });
+          validMembers.forEach(m => { byNo[m.no] = { ...m, portfolio: [] }; });
           portfoliosOnly.forEach(p => {
             const item = { id: p.id, title: p.title, description: p.description, image: p.image };
             if (byNo[p.member_no]) byNo[p.member_no].portfolio.push(item);
           });
-          const merged = Object.values(byNo);
+          const merged = sortByNo(Object.values(byNo));
           root.innerHTML = merged.map(m => renderMember(m)).join("");
           bind();
           try {

@@ -40,7 +40,7 @@ export async function fetchMembers(): Promise<Member[]> {
       (supabase as any).from("hua_member_portfolios").select("*").order("sort_order"),
     ]);
     if (membersRes.error) throw new Error(membersRes.error.message);
-    const rows = membersRes.data ?? [];
+    const rows = (membersRes.data ?? []).filter((r: any) => r?.no != null);
     const portfolios = portfoliosRes.data ?? [];
     const byNo: Record<string, any> = {};
     rows.forEach((r: any) => {
@@ -49,7 +49,9 @@ export async function fetchMembers(): Promise<Member[]> {
     portfolios.forEach((p: any) => {
       if (byNo[p.member_no]) byNo[p.member_no].portfolios.push(p);
     });
-    return Object.values(byNo).map((r) => rowToMember(r));
+    const list = Object.values(byNo).map((r) => rowToMember(r));
+    list.sort((a, b) => a.no.localeCompare(b.no, undefined, { numeric: true }));
+    return list;
   }
   const res = await fetch(apiUrl("api/members"));
   if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));

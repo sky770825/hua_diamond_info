@@ -8,10 +8,16 @@ import * as portfolioService from "../services/portfolioService.js";
 
 const router = Router();
 
+function sortByNo(members) {
+  return members.slice().sort((a, b) =>
+    String(a.no).localeCompare(String(b.no), undefined, { numeric: true })
+  );
+}
+
 router.get("/", async (_req, res) => {
   try {
     const members = await memberService.list();
-    res.json(members);
+    res.json(sortByNo(Array.isArray(members) ? members : []));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

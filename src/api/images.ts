@@ -1,6 +1,9 @@
 import { apiUrl } from "./client";
 
 export function portfolioImageUrl(image: string): string {
-  if (image.startsWith("http") || image.startsWith("data:")) return image;
-  return apiUrl(image.startsWith("/") ? image : `/${image}`);
+  if (image == null || typeof image !== "string") return "";
+  const s = image.trim();
+  if (s === "") return "";
+  if (s.startsWith("http") || s.startsWith("data:")) return s;
+  return apiUrl(s.startsWith("/") ? s : `/${s}`);
 }

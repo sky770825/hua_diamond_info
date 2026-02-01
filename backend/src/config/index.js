@@ -10,4 +10,8 @@ export const config = {
   UPLOADS_DIR: path.join(ROOT, "uploads"),
   UPLOADS_URL_PATH: "/uploads",
   LIMIT_FILE_SIZE: 5 * 1024 * 1024,
+  /** 形象照：1:1 正方形，建議 400x400 以上 */
+  AVATAR_SIZE: 400,
+  /** 作品集：4:3 比例，建議 800x600 以上 */
+  PORTFOLIO_SIZE: { width: 800, height: 600 },
 };

@@ -38,7 +38,15 @@ API 預設運行於 **http://localhost:3001**。可設 `PORT` 改變埠號。
 | POST | `/api/members/:no/portfolio` | 新增作品（multipart: `image`, `title`, `description`） |
 | DELETE | `/api/members/:no/portfolio/:id` | 刪除作品 |
 
-圖片儲存於 `uploads/`，經 `/uploads/:filename` 靜態提供。
+圖片儲存於 `uploads/`，經 `/uploads/:filename` 靜態提供。上傳時會自動縮放：
+- **形象照**：1:1 正方形，400×400 px（`fit: cover` 置中裁切）
+- **作品集**：4:3 比例，800×600 px（`fit: cover` 置中裁切）
+
+測試形象照上傳與刪除：
+```bash
+# 確保後端已啟動
+node backend/scripts/test-avatar-upload.js
+```
 
 ## 資料
 

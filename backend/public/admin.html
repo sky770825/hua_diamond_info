@@ -78,11 +78,14 @@
     .edit-form { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,.25); border-radius: 0.5rem; border: 1px solid var(--border); }
     .edit-form .form-row { margin-bottom: 0.75rem; }
     .edit-form .form-group { margin-bottom: 0.75rem; }
+    [data-edit-ok] { color: var(--success); font-size: 0.9rem; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
   <h1>管理後台｜成員與作品集</h1>
-  <p class="mb4"><a href="/">← 回 API 首頁</a> · 僅供後端編輯，前端為唯讀展示。</p>
+  <p class="mb4">
+    <a href="http://localhost:8080" id="link-frontend" target="_blank" rel="noopener">→ 成員牆（前端）</a>
+  </p>
 
   <div class="panel" id="add-member-panel">
     <div class="toggle-panel">
@@ -231,6 +234,7 @@ const API = (typeof window !== "undefined" && window.location.protocol === "file
             <button type="button" class="btn btn-ghost" data-edit-cancel>取消</button>
           </div>
           <div class="error" data-edit-err style="display:none;"></div>
+          <div class="add-member-ok" data-edit-ok style="display:none;">已儲存</div>
         </div>`;
       return `
         <div class="member" data-no="${escapeHtml(m.no)}">
@@ -294,6 +298,8 @@ const API = (typeof window !== "undefined" && window.location.protocol === "file
         okEl.style.display = "none";
       });
       submitBtn.addEventListener("click", async () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "建立中…";
         const no = document.getElementById("new-no").value.trim();
         const name = document.getElementById("new-name").value.trim();
         const tagsRaw = document.getElementById("new-tags").value.trim();
@@ -317,9 +323,10 @@ const API = (typeof window !== "undefined" && window.location.protocol === "file
         if (!no || !name) {
           errEl.textContent = "請填寫編號與姓名";
           errEl.style.display = "block";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "建立成員";
           return;
         }
-        submitBtn.disabled = true;
         try {
           const res = await fetch((API || "") + "/api/members", {
             method: "POST",
@@ -346,9 +353,21 @@ const API = (typeof window !== "undefined" && window.location.protocol === "file
           errEl.style.display = "block";
         } finally {
           submitBtn.disabled = false;
+          submitBtn.textContent = "建立成員";
         }
       });
     }
+
+    // 成員牆連結：本機用 8080，部署後用 Pages
+    (function() {
+      const link = document.getElementById("link-frontend");
+      if (!link) return;
+      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        link.href = "http://localhost:8080";
+      } else {
+        link.href = "https://hua-diamond-info.pages.dev";
+      }
+    })();
 
     function bind() {
       document.querySelectorAll("[data-avatar-btn]").forEach(btn => {
@@ -495,35 +514,40 @@ const API = (typeof window !== "undefined" && window.location.protocol === "file
           };
           const servicesRaw = member.querySelector("[data-edit-services]")?.value?.trim();
           const services = servicesRaw ? servicesRaw.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
-          const contact = {};
-          const cl = member.querySelector("[data-edit-contact-line]")?.value?.trim();
-          const ce = member.querySelector("[data-edit-contact-email]")?.value?.trim();
-          const cp = member.querySelector("[data-edit-contact-phone]")?.value?.trim();
-          if (cl) contact.line = cl;
-          if (ce) contact.email = ce;
-          if (cp) contact.phone = cp;
+          const contact = {
+            line: member.querySelector("[data-edit-contact-line]")?.value?.trim() || "",
+            email: member.querySelector("[data-edit-contact-email]")?.value?.trim() || "",
+            phone: member.querySelector("[data-edit-contact-phone]")?.value?.trim() || "",
+          };
           const errEl = member.querySelector("[data-edit-err]");
+          const okEl = member.querySelector("[data-edit-ok]");
           if (!name) {
             if (errEl) { errEl.textContent = "姓名必填"; errEl.style.display = "block"; }
+            if (okEl) okEl.style.display = "none";
             return;
           }
           btn.disabled = true;
+          btn.textContent = "儲存中…";
           if (errEl) errEl.style.display = "none";
+          if (okEl) okEl.style.display = "none";
           try {
             await api(`/api/members/${no}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name, tags, needs, services, contact: Object.keys(contact).length ? contact : {} }),
+              body: JSON.stringify({ name, tags, needs, services, contact }),
             });
+            if (okEl) { okEl.textContent = "已儲存"; okEl.style.display = "block"; }
             const form = member.querySelector("[data-edit-form]");
             const toggle = member.querySelector("[data-edit-toggle]");
             if (form) form.style.display = "none";
             if (toggle) toggle.textContent = "編輯";
             await load();
+            if (okEl) setTimeout(() => { okEl.style.display = "none"; }, 2000);
           } catch (err) {
             if (errEl) { errEl.textContent = (err && err.message) || String(err); errEl.style.display = "block"; }
           } finally {
             btn.disabled = false;
+            btn.textContent = "儲存";
           }
         };
       });
@@ -535,11 +559,16 @@ const API = (typeof window !== "undefined" && window.location.protocol === "file
           const no = member?.dataset?.no;
           const name = member?.querySelector("h2")?.textContent || no;
           if (!no || !confirm("確定刪除成員「" + name + "」？此操作無法復原。")) return;
+          btn.disabled = true;
+          btn.textContent = "刪除中…";
           try {
             await api(`/api/members/${no}`, { method: "DELETE" });
             await load();
           } catch (err) {
             alert("刪除失敗：" + ((err && err.message) || String(err)));
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "刪除成員";
           }
         };
       });

@@ -1,23 +1,25 @@
 import { Router } from "express";
+import path from "path";
 import multer from "multer";
-import { upload } from "../lib/imageStorage.js";
+import { upload, resizeToAvatar, resizeToPortfolio } from "../lib/imageStorage.js";
 import { config } from "../config/index.js";
 import * as memberService from "../services/memberService.js";
 import * as portfolioService from "../services/portfolioService.js";
 
 const router = Router();
 
-router.get("/", (_req, res) => {
+router.get("/", async (_req, res) => {
   try {
-    res.json(memberService.list());
+    const members = await memberService.list();
+    res.json(members);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const result = memberService.create(req.body);
+    const result = await memberService.create(req.body);
     if (result.error) return res.status(400).json({ error: result.error });
     res.status(201).json(result.member);
   } catch (e) {
@@ -25,9 +27,9 @@ router.post("/", (req, res) => {
   }
 });
 
-router.get("/:no", (req, res) => {
+router.get("/:no", async (req, res) => {
   try {
-    const m = memberService.getByNo(req.params.no);
+    const m = await memberService.getByNo(req.params.no);
     if (!m) return res.status(404).json({ error: "找不到成員" });
     res.json(m);
   } catch (e) {
@@ -35,9 +37,9 @@ router.get("/:no", (req, res) => {
   }
 });
 
-router.put("/:no", (req, res) => {
+router.put("/:no", async (req, res) => {
   try {
-    const updated = memberService.update(req.params.no, req.body);
+    const updated = await memberService.update(req.params.no, req.body);
     if (!updated) return res.status(404).json({ error: "找不到成員" });
     res.json(updated);
   } catch (e) {
@@ -45,9 +47,9 @@ router.put("/:no", (req, res) => {
   }
 });
 
-router.delete("/:no", (req, res) => {
+router.delete("/:no", async (req, res) => {
   try {
-    const ok = memberService.remove(req.params.no);
+    const ok = await memberService.remove(req.params.no);
     if (!ok) return res.status(404).json({ error: "找不到成員" });
     res.status(204).send();
   } catch (e) {
@@ -58,11 +60,11 @@ router.delete("/:no", (req, res) => {
 router.post(
   "/:no/avatar",
   upload.single("image"),
-  (req, res) => {
+  async (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: "請上傳圖片" });
-      const imagePath = `${config.UPLOADS_URL_PATH}/${req.file.filename}`;
-      const updated = memberService.setAvatar(req.params.no, imagePath);
+      const imagePath = await resizeToAvatar(req.file.path);
+      const updated = await memberService.setAvatar(req.params.no, imagePath);
       if (!updated) return res.status(404).json({ error: "找不到成員" });
       res.json(updated);
     } catch (e) {
@@ -71,9 +73,9 @@ router.post(
   }
 );
 
-router.delete("/:no/avatar", (req, res) => {
+router.delete("/:no/avatar", async (req, res) => {
   try {
-    const updated = memberService.setAvatar(req.params.no, null);
+    const updated = await memberService.setAvatar(req.params.no, null);
     if (!updated) return res.status(404).json({ error: "找不到成員" });
     res.json(updated);
   } catch (e) {
@@ -84,11 +86,11 @@ router.delete("/:no/avatar", (req, res) => {
 router.post(
   "/:no/portfolio",
   upload.single("image"),
-  (req, res) => {
+  async (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: "請上傳圖片" });
-      const imagePath = `${config.UPLOADS_URL_PATH}/${req.file.filename}`;
-      const item = portfolioService.addItem(req.params.no, {
+      const imagePath = await resizeToPortfolio(path.resolve(req.file.path));
+      const item = await portfolioService.addItem(req.params.no, {
         imagePath,
         title: req.body.title,
         description: req.body.description,
@@ -101,9 +103,9 @@ router.post(
   }
 );
 
-router.delete("/:no/portfolio/:id", (req, res) => {
+router.delete("/:no/portfolio/:id", async (req, res) => {
   try {
-    const ok = portfolioService.deleteItem(req.params.no, req.params.id);
+    const ok = await portfolioService.deleteItem(req.params.no, req.params.id);
     if (!ok) return res.status(404).json({ error: "找不到成員或作品" });
     res.status(204).send();
   } catch (e) {

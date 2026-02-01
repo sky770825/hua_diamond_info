@@ -1,97 +1,64 @@
-import { readMembers, writeMembers } from "../lib/store.js";
+import * as store from "../lib/store.js";
 import { deleteByRelPath } from "../lib/imageStorage.js";
 
-export function list() {
-  return readMembers();
+export async function list() {
+  return store.readMembers();
 }
 
-export function getByNo(no) {
-  const members = readMembers();
-  const m = members.find((x) => x.no === no);
-  return m ?? null;
+export async function getByNo(no) {
+  return store.getMemberByNo(no);
 }
 
 /**
  * 新增成員。
- * @param {{ no: string; name: string; tags: string[]; needs: { general: string; ideal: string; dream: string }; services: string[] }} payload
- * @returns {{ member: object } | { error: string }}
  */
-export function create(payload) {
-  const members = readMembers();
-  if (members.some((x) => x.no === payload.no)) {
-    return { error: "編號已存在" };
-  }
-  const contact = {};
-  if (payload.contact?.line) contact.line = String(payload.contact.line).trim();
-  if (payload.contact?.email) contact.email = String(payload.contact.email).trim();
-  if (payload.contact?.phone) contact.phone = String(payload.contact.phone).trim();
-  const member = {
-    no: String(payload.no).trim(),
-    name: String(payload.name).trim(),
-    tags: Array.isArray(payload.tags) ? payload.tags : [],
-    needs: {
-      general: String(payload.needs?.general ?? "").trim(),
-      ideal: String(payload.needs?.ideal ?? "").trim(),
-      dream: String(payload.needs?.dream ?? "").trim(),
-    },
-    services: Array.isArray(payload.services) ? payload.services : [],
-    portfolio: [],
-  };
-  if (Object.keys(contact).length > 0) member.contact = contact;
-  if (!member.no || !member.name) return { error: "編號與姓名必填" };
-  members.push(member);
-  writeMembers(members);
-  return { member };
+export async function create(payload) {
+  const result = await store.createMember(payload);
+  if (result.error) return { error: result.error };
+  return { member: result.member };
 }
 
-export function update(no, patch) {
-  const members = readMembers();
-  const i = members.findIndex((x) => x.no === no);
-  if (i < 0) return null;
-  const updated = { ...members[i], ...patch, no: members[i].no };
-  members[i] = updated;
-  writeMembers(members);
-  return updated;
+/**
+ * 更新成員。
+ * 將空字串的 contact 欄位轉為 undefined，以正確清除聯絡方式。
+ */
+export async function update(no, patch) {
+  const p = { ...patch };
+  if (p.contact && typeof p.contact === "object") {
+    const c = p.contact;
+    p.contact = {
+      line: c.line && String(c.line).trim() ? String(c.line).trim() : undefined,
+      email: c.email && String(c.email).trim() ? String(c.email).trim() : undefined,
+      phone: c.phone && String(c.phone).trim() ? String(c.phone).trim() : undefined,
+    };
+    if (!p.contact.line && !p.contact.email && !p.contact.phone) {
+      p.contact = {};
+    }
+  }
+  return store.updateMember(no, p);
 }
 
 /**
  * 刪除成員。
- * @param {string} no - 成員編號
- * @returns {boolean} 是否刪除成功
  */
-export function remove(no) {
-  const members = readMembers();
-  const i = members.findIndex((x) => x.no === no);
-  if (i < 0) return false;
-  const m = members[i];
-  if (m.avatar) deleteByRelPath(m.avatar);
-  const port = m.portfolio || [];
-  for (const p of port) {
-    if (p.image) deleteByRelPath(p.image);
+export async function remove(no) {
+  const members = await store.readMembers();
+  const m = members.find((x) => x.no === no);
+  if (m) {
+    if (m.avatar) deleteByRelPath(m.avatar);
+    for (const p of m.portfolio || []) {
+      if (p.image) deleteByRelPath(p.image);
+    }
   }
-  members.splice(i, 1);
-  writeMembers(members);
-  return true;
+  return store.removeMember(no);
 }
 
 /**
  * 設定或清除成員形象照。
- * @param {string} no - 成員編號
- * @param {string | null} avatarPath - 新圖片路徑（如 /uploads/xxx.jpg），或 null 表示移除
- * @returns {object | null} 更新後的成員，找不到則 null
  */
-export function setAvatar(no, avatarPath) {
-  const members = readMembers();
-  const i = members.findIndex((x) => x.no === no);
-  if (i < 0) return null;
-  const prev = members[i].avatar;
-  if (prev) deleteByRelPath(prev);
-  if (avatarPath) {
-    members[i] = { ...members[i], avatar: avatarPath };
-  } else {
-    const { avatar: _, ...rest } = members[i];
-    members[i] = rest;
-  }
-  writeMembers(members);
-  return members[i];
+export async function setAvatar(no, avatarPath) {
+  const members = await store.readMembers();
+  const m = members.find((x) => x.no === no);
+  if (m?.avatar) deleteByRelPath(m.avatar);
+  return store.setMemberAvatar(no, avatarPath);
 }

@@ -19,6 +19,6 @@ app.get("/api/health", (_, res) => res.json({ ok: true }));
 app.get("/admin", (_, res) => res.redirect("/admin.html"));
 
 app.listen(config.PORT, () => {
-  const dbMode = process.env.DATABASE_URL ? "PostgreSQL (hua_internation)" : "JSON 本機";
+  const dbMode = process.env.MONGODB_URI ? "MongoDB" : process.env.DATABASE_URL ? "PostgreSQL (hua_internation)" : "JSON 本機";
   console.log(`[後端] API 運行於 http://localhost:${config.PORT}，資料來源：${dbMode}`);
 });

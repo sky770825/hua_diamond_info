@@ -1,14 +1,24 @@
 /**
- * Store 統一介面：DATABASE_URL 有設定時用 PostgreSQL (hua_internation)；
- * 否則用本機 JSON 檔 (backend/data/members.json)
+ * Store 統一介面：
+ * - MONGODB_URI 有設定時用 MongoDB；
+ * - DATABASE_URL 有設定時用 PostgreSQL (hua_internation)；
+ * - 否則用本機 JSON 檔 (backend/data/members.json)
  */
 
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { config } from "../config/index.js";
 import * as dbStore from "./dbStore.js";
+import * as mongoStore from "./mongoStore.js";
 
+const USE_MONGO = !!process.env.MONGODB_URI;
 const USE_DB = !!process.env.DATABASE_URL;
+
+function pickStore() {
+  if (USE_MONGO) return mongoStore;
+  if (USE_DB) return dbStore;
+  return null;
+}
 
 // JSON 操作（同步）
 function readJson() {
@@ -21,19 +31,22 @@ function writeJson(members) {
 }
 
 export function readMembers() {
-  if (USE_DB) return dbStore.readMembers();
+  const store = pickStore();
+  if (store) return store.readMembers();
   return Promise.resolve(readJson());
 }
 
 export function getMemberByNo(no) {
-  if (USE_DB) return dbStore.getMemberByNo(no);
+  const store = pickStore();
+  if (store) return store.getMemberByNo(no);
   const members = readJson();
   const m = members.find((x) => x.no === no);
   return Promise.resolve(m ?? null);
 }
 
 export function createMember(payload) {
-  if (USE_DB) return dbStore.createMember(payload);
+  const store = pickStore();
+  if (store) return store.createMember(payload);
   const members = readJson();
   if (members.some((x) => x.no === payload.no)) {
     return Promise.resolve({ error: "編號已存在" });
@@ -62,7 +75,8 @@ export function createMember(payload) {
 }
 
 export function updateMember(no, patch) {
-  if (USE_DB) return dbStore.updateMember(no, patch);
+  const store = pickStore();
+  if (store) return store.updateMember(no, patch);
   const members = readJson();
   const i = members.findIndex((x) => x.no === no);
   if (i < 0) return Promise.resolve(null);
@@ -73,7 +87,8 @@ export function updateMember(no, patch) {
 }
 
 export function removeMember(no) {
-  if (USE_DB) return dbStore.removeMember(no);
+  const store = pickStore();
+  if (store) return store.removeMember(no);
   const members = readJson();
   const i = members.findIndex((x) => x.no === no);
   if (i < 0) return Promise.resolve(false);
@@ -83,7 +98,8 @@ export function removeMember(no) {
 }
 
 export function setMemberAvatar(no, avatarPath) {
-  if (USE_DB) return dbStore.setMemberAvatar(no, avatarPath);
+  const store = pickStore();
+  if (store) return store.setMemberAvatar(no, avatarPath);
   const members = readJson();
   const i = members.findIndex((x) => x.no === no);
   if (i < 0) return Promise.resolve(null);
@@ -98,7 +114,8 @@ export function setMemberAvatar(no, avatarPath) {
 }
 
 export function addPortfolioItem(memberNo, payload) {
-  if (USE_DB) return dbStore.addPortfolioItem(memberNo, payload);
+  const store = pickStore();
+  if (store) return store.addPortfolioItem(memberNo, payload);
   const members = readJson();
   const i = members.findIndex((x) => x.no === memberNo);
   if (i < 0) return Promise.resolve(null);
@@ -115,7 +132,8 @@ export function addPortfolioItem(memberNo, payload) {
 }
 
 export function deletePortfolioItem(memberNo, itemId) {
-  if (USE_DB) return dbStore.deletePortfolioItem(memberNo, itemId);
+  const store = pickStore();
+  if (store) return store.deletePortfolioItem(memberNo, itemId);
   const members = readJson();
   const i = members.findIndex((x) => x.no === memberNo);
   if (i < 0) return Promise.resolve(false);

@@ -1,0 +1,33 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 後端上傳目錄
+backend/uploads
+
+# 環境變數（含 DATABASE_URL 等）
+.env
+
+# 使用 npm 鎖檔，避免 Cloudflare Pages 偵測到 bun.lockb 導致 lockfile 解析失敗
+bun.lockb

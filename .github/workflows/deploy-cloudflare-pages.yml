@@ -1,0 +1,34 @@
+# Push 到 main 時驗證建置成功
+# 實際部署由 Cloudflare Pages 的 Git 整合自動處理（專案已連接 sky770825/hua_diamond_info）
+# 若需本機手動部署：npm run deploy（需先 npx wrangler login）
+
+name: Build Check
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # 支援 API_URL / ADMIN_URL 或 VITE_*（舊版相容）
+          API_URL: ${{ secrets.API_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          ADMIN_URL: ${{ secrets.ADMIN_URL }}
+          VITE_ADMIN_URL: ${{ secrets.VITE_ADMIN_URL }}

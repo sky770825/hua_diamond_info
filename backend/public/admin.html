@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>管理後台｜成員與作品集</title>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --border: #334155; --text: #f1f5f9; --muted: #94a3b8; --primary: #0ea5e9; --success: #22c55e; --danger: #ef4444; }
+    * { box-sizing: border-box; }
+    body { font-family: ui-sans-serif, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1.5rem; line-height: 1.5; }
+    h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+    a { color: var(--primary); }
+    .mb4 { margin-bottom: 1rem; }
+    .top-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .btn { padding: 0.5rem 1rem; font-size: 0.9rem; border: none; border-radius: 0.375rem; cursor: pointer; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { opacity: .9; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--primary); }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .panel h2 { font-size: 1.1rem; margin: 0 0 1rem; color: var(--text); }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.8rem; margin-bottom: 0.25rem; color: var(--muted); }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.5rem 0.6rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.25rem; color: var(--text); font-size: 0.9rem; }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--muted); }
+    .form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .form-actions .btn { flex-shrink: 0; }
+    .add-member-err { color: var(--danger); font-size: 0.9rem; margin-top: 0.5rem; }
+    .add-member-ok { color: var(--success); font-size: 0.9rem; margin-top: 0.5rem; }
+    .members { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; align-items: start; }
+    .member { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; min-width: 0; }
+    .member h2 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+    .member .no { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.75rem; }
+    .tag { font-size: 0.75rem; padding: 0.2em 0.5em; background: rgba(14,165,233,.2); color: var(--primary); border-radius: 0.25rem; }
+    .avatar-section { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .avatar-section h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+    .avatar-current { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .avatar-current img { width: 64px; height: 64px; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--border); }
+    .avatar-current .none { color: var(--muted); font-size: 0.9rem; }
+    .avatar-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+    .avatar-actions button { padding: 0.35rem 0.6rem; font-size: 0.85rem; border: none; border-radius: 0.25rem; cursor: pointer; }
+    .avatar-actions .btn-upload { background: var(--primary); color: #fff; }
+    .avatar-actions .btn-upload:hover:not(:disabled) { opacity: .9; }
+    .avatar-actions .btn-remove { background: rgba(239,68,68,.2); color: var(--danger); }
+    .avatar-actions .btn-remove:hover { background: rgba(239,68,68,.3); }
+    .avatar-actions button:disabled { opacity: .5; cursor: not-allowed; }
+    .portfolio-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .portfolio-section h3 { font-size: 0.95rem; margin: 0 0 0.75rem; }
+    .portfolio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .portfolio-card { position: relative; background: var(--bg); border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,.2); display: flex; flex-direction: column; }
+    .portfolio-card .thumb { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+    .portfolio-card .body { padding: 0.75rem 1rem; flex: 1; }
+    .portfolio-card .tit { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .portfolio-card .desc { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+    .portfolio-card .del { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: none; border-radius: 50%; background: rgba(15,23,42,.85); color: var(--danger); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+    .portfolio-card .del:hover { background: var(--danger); color: #fff; }
+    .add-form { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,.2); border-radius: 0.5rem; }
+    .add-form label { display: block; font-size: 0.8rem; margin-bottom: 0.25rem; color: var(--muted); }
+    .add-form input, .add-form textarea { width: 100%; padding: 0.5rem 0.6rem; margin-bottom: 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.25rem; color: var(--text); font-size: 0.9rem; }
+    .add-form textarea { min-height: 60px; resize: vertical; }
+    .add-form .btn { margin-top: 0.25rem; }
+    .add-form .success { color: var(--success); margin-top: 0.5rem; font-size: 0.9rem; }
+    .loading { color: var(--muted); }
+    .error { color: var(--danger); margin-top: 0.5rem; font-size: 0.9rem; }
+    .load-failed { margin-top: 0.75rem; }
+    .load-failed .btn { padding: 0.5rem 1rem; }
+    .toggle-panel { margin-bottom: 0.5rem; }
+    .member-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .member-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .btn-edit { background: rgba(14,165,233,.2); color: var(--primary); }
+    .btn-edit:hover { background: rgba(14,165,233,.3); }
+    .btn-danger { background: rgba(239,68,68,.2); color: var(--danger); }
+    .btn-danger:hover { background: rgba(239,68,68,.4); }
+    .edit-form { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,.25); border-radius: 0.5rem; border: 1px solid var(--border); }
+    .edit-form .form-row { margin-bottom: 0.75rem; }
+    .edit-form .form-group { margin-bottom: 0.75rem; }
+    [data-edit-ok] { color: var(--success); font-size: 0.9rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>管理後台｜成員與作品集</h1>
+  <p class="mb4">
+    <a href="http://localhost:8080" id="link-frontend" target="_blank" rel="noopener">→ 成員牆（前端）</a>
+  </p>
+
+  <div class="panel" id="add-member-panel">
+    <div class="toggle-panel">
+      <button type="button" class="btn btn-primary" id="add-member-toggle" aria-expanded="false">＋ 新增成員</button>
+    </div>
+    <div id="add-member-form" style="display:none;">
+      <h2>新增成員</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>編號 *</label>
+          <input type="text" id="new-no" placeholder="例：101" required />
+        </div>
+        <div class="form-group">
+          <label>姓名 *</label>
+          <input type="text" id="new-name" placeholder="例：王小明" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>技能標籤（逗號分隔）</label>
+        <input type="text" id="new-tags" placeholder="例：廣告、行銷、數據分析" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>引薦需求－一般</label>
+          <input type="text" id="new-needs-general" placeholder="一般需求" />
+        </div>
+        <div class="form-group">
+          <label>引薦需求－理想</label>
+          <input type="text" id="new-needs-ideal" placeholder="理想需求" />
+        </div>
+        <div class="form-group">
+          <label>引薦需求－夢幻</label>
+          <input type="text" id="new-needs-dream" placeholder="夢幻需求" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>服務項目（一行一項）</label>
+        <textarea id="new-services" placeholder="服務一&#10;服務二&#10;服務三"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>聯絡：LINE（ID 或網址）</label>
+          <input type="text" id="new-contact-line" placeholder="例：@abc 或 https://line.me/ti/p/xxx" />
+        </div>
+        <div class="form-group">
+          <label>聯絡：Email</label>
+          <input type="email" id="new-contact-email" placeholder="example@mail.com" />
+        </div>
+        <div class="form-group">
+          <label>聯絡：電話</label>
+          <input type="text" id="new-contact-phone" placeholder="0912345678" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" id="add-member-submit">建立成員</button>
+        <button type="button" class="btn btn-ghost" id="add-member-cancel">取消</button>
+      </div>
+      <div class="add-member-err" id="add-member-err" style="display:none;"></div>
+      <div class="add-member-ok" id="add-member-ok" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div id="root" class="members">
+    <div class="loading">載入中…</div>
+  </div>
+
+  <script>
+    // file:// 時需指定後端網址；由後端提供時用同源 (空字串)
+const API = (typeof window !== "undefined" && window.location.protocol === "file:") ? "http://localhost:3001" : "";
+    async function api(path, opts = {}) {
+      const r = await fetch((API || "") + path, { ...opts, headers: { ...opts.headers, "Accept": "application/json" } });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error || r.statusText);
+      }
+      if (r.status === 204) return;
+      return r.json();
+    }
+
+    function portfolioImageUrl(img) {
+      if (!img) return "";
+      if (img.startsWith("http") || img.startsWith("data:")) return img;
+      return (API || "") + (img.startsWith("/") ? img : "/" + img);
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s ?? "";
+      return d.innerHTML;
+    }
+
+    async function load() {
+      const root = document.getElementById("root");
+      try {
+        const members = await api("/api/members");
+        root.innerHTML = members.map(m => renderMember(m)).join("");
+        bind();
+      } catch (e) {
+        root.innerHTML = `
+          <div class="error">載入失敗：${escapeHtml((e && e.message) || String(e))}</div>
+          <div class="load-failed"><button type="button" class="btn btn-primary" data-retry>重試</button></div>
+        `;
+        document.querySelector("[data-retry]")?.addEventListener("click", load);
+      }
+    }
+
+    function renderMember(m) {
+      const port = m.portfolio || [];
+      const portHtml = port.length
+        ? `<div class="portfolio-grid">${port.map(p => `
+          <div class="portfolio-card" data-member="${m.no}" data-id="${p.id}">
+            <img class="thumb" src="${portfolioImageUrl(p.image)}" alt="${escapeHtml(p.title || "作品")}" />
+            <div class="body">
+              ${p.title ? `<div class="tit">${escapeHtml(p.title)}</div>` : ""}
+              ${p.description ? `<div class="desc">${escapeHtml(p.description)}</div>` : ""}
+            </div>
+            <button type="button" class="del" aria-label="刪除作品">×</button>
+          </div>
+        `).join("")}</div>`
+        : `<p style="color:var(--muted);font-size:0.9rem;">尚無作品</p>`;
+      const avatar = m.avatar || null;
+      const avatarHtml = avatar
+        ? `<div class="avatar-current"><img src="${portfolioImageUrl(avatar)}" alt="形象照" /></div>`
+        : `<div class="avatar-current"><span class="none">尚無形象照</span></div>`;
+      const c = m.contact || {};
+      const editFormHtml = `
+        <div class="edit-form" data-edit-form style="display:none;">
+          <h4 style="margin:0 0 0.75rem;font-size:0.95rem;">編輯成員</h4>
+          <div class="form-row">
+            <div class="form-group"><label>姓名 *</label><input type="text" data-edit-name value="${escapeHtml(m.name)}" /></div>
+          </div>
+          <div class="form-group"><label>技能標籤（逗號分隔）</label><input type="text" data-edit-tags value="${escapeHtml((m.tags || []).join("、"))}" /></div>
+          <div class="form-row">
+            <div class="form-group"><label>引薦需求－一般</label><input type="text" data-edit-needs-general value="${escapeHtml(m.needs?.general || "")}" /></div>
+            <div class="form-group"><label>引薦需求－理想</label><input type="text" data-edit-needs-ideal value="${escapeHtml(m.needs?.ideal || "")}" /></div>
+            <div class="form-group"><label>引薦需求－夢幻</label><input type="text" data-edit-needs-dream value="${escapeHtml(m.needs?.dream || "")}" /></div>
+          </div>
+          <div class="form-group"><label>服務項目（一行一項）</label><textarea data-edit-services rows="3">${escapeHtml((m.services || []).join("\n"))}</textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>聯絡：LINE</label><input type="text" data-edit-contact-line value="${escapeHtml(c.line || "")}" placeholder="ID 或網址" /></div>
+            <div class="form-group"><label>聯絡：Email</label><input type="email" data-edit-contact-email value="${escapeHtml(c.email || "")}" /></div>
+            <div class="form-group"><label>聯絡：電話</label><input type="text" data-edit-contact-phone value="${escapeHtml(c.phone || "")}" /></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" data-edit-save>儲存</button>
+            <button type="button" class="btn btn-ghost" data-edit-cancel>取消</button>
+          </div>
+          <div class="error" data-edit-err style="display:none;"></div>
+          <div class="add-member-ok" data-edit-ok style="display:none;">已儲存</div>
+        </div>`;
+      return `
+        <div class="member" data-no="${escapeHtml(m.no)}">
+          <div class="member-header">
+            <div>
+              <div class="no">NO.${escapeHtml(m.no)}</div>
+              <h2 style="margin:0;">${escapeHtml(m.name)}</h2>
+            </div>
+            <div class="member-actions">
+              <button type="button" class="btn btn-edit btn" data-edit-toggle>編輯</button>
+              <button type="button" class="btn btn-danger btn" data-delete-member>刪除成員</button>
+            </div>
+          </div>
+          ${editFormHtml}
+          <div class="tags">${(m.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
+          <div class="avatar-section">
+            <h3>形象照片</h3>
+            ${avatarHtml}
+            <div class="avatar-actions">
+              <input type="file" accept="image/*" data-avatar-file style="display:none" />
+              <button type="button" class="btn-upload" data-avatar-btn>上傳形象照</button>
+              ${avatar ? `<button type="button" class="btn-remove" data-avatar-remove>移除</button>` : ""}
+            </div>
+          </div>
+          <div class="portfolio-section">
+            <h3>作品集</h3>
+            ${portHtml}
+            <div class="add-form">
+              <label>新增作品</label>
+              <input type="file" accept="image/*" data-add-img />
+              <input type="text" placeholder="標題（選填）" data-add-title />
+              <textarea placeholder="描述（選填）" data-add-desc></textarea>
+              <button type="button" class="btn btn-primary" data-add-btn>上傳</button>
+              <div class="error" data-add-err style="display:none"></div>
+              <div class="success" data-add-ok style="display:none"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function initAddMember() {
+      const toggle = document.getElementById("add-member-toggle");
+      const formEl = document.getElementById("add-member-form");
+      const cancelBtn = document.getElementById("add-member-cancel");
+      const submitBtn = document.getElementById("add-member-submit");
+      const errEl = document.getElementById("add-member-err");
+      const okEl = document.getElementById("add-member-ok");
+      toggle.addEventListener("click", () => {
+        const open = formEl.style.display !== "none";
+        formEl.style.display = open ? "none" : "block";
+        toggle.setAttribute("aria-expanded", open ? "false" : "true");
+        toggle.textContent = open ? "＋ 新增成員" : "－ 收起表單";
+        if (open) { errEl.style.display = "none"; okEl.style.display = "none"; }
+      });
+      cancelBtn.addEventListener("click", () => {
+        formEl.style.display = "none";
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = "＋ 新增成員";
+        errEl.style.display = "none";
+        okEl.style.display = "none";
+      });
+      submitBtn.addEventListener("click", async () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "建立中…";
+        const no = document.getElementById("new-no").value.trim();
+        const name = document.getElementById("new-name").value.trim();
+        const tagsRaw = document.getElementById("new-tags").value.trim();
+        const tags = tagsRaw ? tagsRaw.split(/[,，、]/).map(s => s.trim()).filter(Boolean) : [];
+        const needs = {
+          general: document.getElementById("new-needs-general").value.trim(),
+          ideal: document.getElementById("new-needs-ideal").value.trim(),
+          dream: document.getElementById("new-needs-dream").value.trim(),
+        };
+        const servicesRaw = document.getElementById("new-services").value.trim();
+        const services = servicesRaw ? servicesRaw.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
+        const contact = {};
+        const cl = document.getElementById("new-contact-line")?.value?.trim();
+        const ce = document.getElementById("new-contact-email")?.value?.trim();
+        const cp = document.getElementById("new-contact-phone")?.value?.trim();
+        if (cl) contact.line = cl;
+        if (ce) contact.email = ce;
+        if (cp) contact.phone = cp;
+        errEl.style.display = "none";
+        okEl.style.display = "none";
+        if (!no || !name) {
+          errEl.textContent = "請填寫編號與姓名";
+          errEl.style.display = "block";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "建立成員";
+          return;
+        }
+        try {
+          const res = await fetch((API || "") + "/api/members", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ no, name, tags, needs, services, contact: Object.keys(contact).length ? contact : undefined }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || res.statusText);
+          okEl.textContent = "已新增成員 " + name;
+          okEl.style.display = "block";
+          document.getElementById("new-no").value = "";
+          document.getElementById("new-name").value = "";
+          document.getElementById("new-tags").value = "";
+          document.getElementById("new-needs-general").value = "";
+          document.getElementById("new-needs-ideal").value = "";
+          document.getElementById("new-needs-dream").value = "";
+          document.getElementById("new-services").value = "";
+          document.getElementById("new-contact-line").value = "";
+          document.getElementById("new-contact-email").value = "";
+          document.getElementById("new-contact-phone").value = "";
+          setTimeout(() => load(), 1000);
+        } catch (e) {
+          errEl.textContent = (e && e.message) || String(e);
+          errEl.style.display = "block";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "建立成員";
+        }
+      });
+    }
+
+    // 成員牆連結：本機用 8080，部署後用 Pages
+    (function() {
+      const link = document.getElementById("link-frontend");
+      if (!link) return;
+      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        link.href = "http://localhost:8080";
+      } else {
+        link.href = "https://hua-diamond-info.pages.dev";
+      }
+    })();
+
+    function bind() {
+      document.querySelectorAll("[data-avatar-btn]").forEach(btn => {
+        const member = btn.closest(".member");
+        const no = member?.dataset?.no;
+        const fileInput = member?.querySelector("[data-avatar-file]");
+        if (!no || !fileInput) return;
+        btn.onclick = (e) => { e.preventDefault(); fileInput.click(); };
+        fileInput.onchange = async () => {
+          const file = fileInput.files?.[0];
+          if (!file) return;
+          btn.disabled = true;
+          btn.textContent = "上傳中…";
+          try {
+            const form = new FormData();
+            form.append("image", file);
+            const res = await fetch((API || "") + `/api/members/${no}/avatar`, { method: "POST", body: form });
+            if (!res.ok) {
+              const j = await res.json().catch(() => ({}));
+              throw new Error(j.error || res.statusText);
+            }
+            fileInput.value = "";
+            setTimeout(() => load(), 1200);
+          } catch (e) {
+            alert("上傳失敗：" + ((e && e.message) || String(e)));
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "上傳形象照";
+          }
+        };
+      });
+
+      document.querySelectorAll("[data-avatar-remove]").forEach(btn => {
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          const member = btn.closest(".member");
+          const no = member?.dataset?.no;
+          if (!no || !confirm("確定移除形象照？")) return;
+          try {
+            await api(`/api/members/${no}/avatar`, { method: "DELETE" });
+            await load();
+          } catch (e) {
+            alert("移除失敗：" + ((e && e.message) || String(e)));
+          }
+        };
+      });
+
+      document.querySelectorAll("[data-add-btn]").forEach(btn => {
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          const member = btn.closest(".member");
+          const no = member?.dataset?.no;
+          const file = member?.querySelector("[data-add-img]")?.files?.[0];
+          const title = member?.querySelector("[data-add-title]")?.value?.trim();
+          const desc = member?.querySelector("[data-add-desc]")?.value?.trim();
+          const errEl = member?.querySelector("[data-add-err]");
+          if (!no) return;
+          if (!file) {
+            if (errEl) { errEl.textContent = "請選擇圖片"; errEl.style.display = "block"; }
+            return;
+          }
+          const okEl = member?.querySelector("[data-add-ok]");
+          if (errEl) errEl.style.display = "none";
+          if (okEl) okEl.style.display = "none";
+          btn.disabled = true;
+          btn.textContent = "上傳中…";
+          try {
+            const form = new FormData();
+            form.append("image", file);
+            if (title) form.append("title", title);
+            if (desc) form.append("description", desc);
+            const res = await fetch((API || "") + `/api/members/${no}/portfolio`, { method: "POST", body: form });
+            if (!res.ok) {
+              const j = await res.json().catch(() => ({}));
+              throw new Error(j.error || res.statusText);
+            }
+            member.querySelector("[data-add-img]").value = "";
+            member.querySelector("[data-add-title]").value = "";
+            member.querySelector("[data-add-desc]").value = "";
+            if (okEl) { okEl.textContent = "已新增"; okEl.style.display = "block"; }
+            setTimeout(() => load(), 1200);
+          } catch (e) {
+            if (errEl) { errEl.textContent = (e && e.message) || String(e); errEl.style.display = "block"; }
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "上傳";
+          }
+        };
+      });
+
+      document.querySelectorAll(".portfolio-card .del").forEach(b => {
+        b.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = b.closest(".portfolio-card");
+          const no = card?.dataset?.member;
+          const id = card?.dataset?.id;
+          if (!no || !id || !confirm("確定刪除此作品？")) return;
+          try {
+            await api(`/api/members/${no}/portfolio/${id}`, { method: "DELETE" });
+            await load();
+          } catch (err) {
+            alert("刪除失敗：" + ((err && err.message) || String(err)));
+          }
+        };
+      });
+
+      document.querySelectorAll("[data-edit-toggle]").forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const member = btn.closest(".member");
+          const form = member?.querySelector("[data-edit-form]");
+          if (!form) return;
+          const open = form.style.display !== "none";
+          form.style.display = open ? "none" : "block";
+          btn.textContent = open ? "編輯" : "收起";
+        };
+      });
+
+      document.querySelectorAll("[data-edit-cancel]").forEach(btn => {
+        btn.onclick = (e) => {
+          e.preventDefault();
+          const member = btn.closest(".member");
+          const form = member?.querySelector("[data-edit-form]");
+          const toggle = member?.querySelector("[data-edit-toggle]");
+          if (form) form.style.display = "none";
+          if (toggle) toggle.textContent = "編輯";
+        };
+      });
+
+      document.querySelectorAll("[data-edit-save]").forEach(btn => {
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          const member = btn.closest(".member");
+          const no = member?.dataset?.no;
+          if (!no) return;
+          const name = member.querySelector("[data-edit-name]")?.value?.trim();
+          const tagsRaw = member.querySelector("[data-edit-tags]")?.value?.trim();
+          const tags = tagsRaw ? tagsRaw.split(/[,，、]/).map(s => s.trim()).filter(Boolean) : [];
+          const needs = {
+            general: member.querySelector("[data-edit-needs-general]")?.value?.trim() || "",
+            ideal: member.querySelector("[data-edit-needs-ideal]")?.value?.trim() || "",
+            dream: member.querySelector("[data-edit-needs-dream]")?.value?.trim() || "",
+          };
+          const servicesRaw = member.querySelector("[data-edit-services]")?.value?.trim();
+          const services = servicesRaw ? servicesRaw.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
+          const contact = {
+            line: member.querySelector("[data-edit-contact-line]")?.value?.trim() || "",
+            email: member.querySelector("[data-edit-contact-email]")?.value?.trim() || "",
+            phone: member.querySelector("[data-edit-contact-phone]")?.value?.trim() || "",
+          };
+          const errEl = member.querySelector("[data-edit-err]");
+          const okEl = member.querySelector("[data-edit-ok]");
+          if (!name) {
+            if (errEl) { errEl.textContent = "姓名必填"; errEl.style.display = "block"; }
+            if (okEl) okEl.style.display = "none";
+            return;
+          }
+          btn.disabled = true;
+          btn.textContent = "儲存中…";
+          if (errEl) errEl.style.display = "none";
+          if (okEl) okEl.style.display = "none";
+          try {
+            await api(`/api/members/${no}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, tags, needs, services, contact }),
+            });
+            if (okEl) { okEl.textContent = "已儲存"; okEl.style.display = "block"; }
+            const form = member.querySelector("[data-edit-form]");
+            const toggle = member.querySelector("[data-edit-toggle]");
+            if (form) form.style.display = "none";
+            if (toggle) toggle.textContent = "編輯";
+            await load();
+            if (okEl) setTimeout(() => { okEl.style.display = "none"; }, 2000);
+          } catch (err) {
+            if (errEl) { errEl.textContent = (err && err.message) || String(err); errEl.style.display = "block"; }
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "儲存";
+          }
+        };
+      });
+
+      document.querySelectorAll("[data-delete-member]").forEach(btn => {
+        btn.onclick = async (e) => {
+          e.preventDefault();
+          const member = btn.closest(".member");
+          const no = member?.dataset?.no;
+          const name = member?.querySelector("h2")?.textContent || no;
+          if (!no || !confirm("確定刪除成員「" + name + "」？此操作無法復原。")) return;
+          btn.disabled = true;
+          btn.textContent = "刪除中…";
+          try {
+            await api(`/api/members/${no}`, { method: "DELETE" });
+            await load();
+          } catch (err) {
+            alert("刪除失敗：" + ((err && err.message) || String(err)));
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "刪除成員";
+          }
+        };
+      });
+    }
+
+    initAddMember();
+    load();
+  </script>
+</body>
+</html>

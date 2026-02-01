@@ -152,83 +152,125 @@
     <div class="loading">載入中…</div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // file:// 時需指定後端網址；由後端提供時用同源 (空字串)
-// 生產環境：從 localStorage 讀寫數據（本地模擬後端）
-const API = "";
-    // localStorage 模拟后端 API
-    const STORAGE_KEY = 'hua_members_data';
-    
-    function getMembers() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-      // 首次加载，从静态 JSON 获取
-      return null;
+    // Supabase 設定（與前端 .env 一致，anon key 可公開）
+    const SUPABASE_URL = window.__SUPABASE_URL__ || "https://cnzqtuuegdqwkgvletaa.supabase.co";
+    const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__ || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuenF0dXVlZ2Rxd2tndmxldGFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjUxMTksImV4cCI6MjA4MzcwMTExOX0.gsO3RKdMu2bUXW4b5aHseouIkjXtJyIqqP_0x3Y6trE";
+    const { createClient } = window.supabase || {};
+    const sb = typeof createClient === "function" ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+    const BUCKET = "hua-diamond-images";
+
+    function rowToMember(row) {
+      return {
+        no: row.no,
+        name: row.name,
+        avatar: row.avatar || null,
+        tags: row.tags || [],
+        needs: row.needs || {},
+        services: row.services || [],
+        contact: row.contact || {},
+        portfolio: (row.portfolios || []).map(p => ({ id: p.id, title: p.title, description: p.description, image: p.image }))
+      };
     }
-    
-    function saveMembers(members) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-    }
-    
+
     async function api(path, opts = {}) {
-      const method = opts.method || 'GET';
-      
-      // GET /api/members - 获取所有成员
-      if (path === '/api/members' && method === 'GET') {
-        let members = getMembers();
-        if (!members) {
-          // 首次加载，从静态 JSON 获取
-          const r = await fetch('/members.json');
-          members = await r.json();
-          saveMembers(members);
-        }
-        return members;
+      if (!sb) throw new Error("Supabase 未初始化");
+      const method = opts.method || "GET";
+
+      if (path === "/api/members" && method === "GET") {
+        const { data: rows, error } = await sb.from("hua_members").select("*").order("no");
+        if (error) throw new Error(error.message);
+        const { data: portfolios } = await sb.from("hua_member_portfolios").select("*").order("sort_order");
+        const byNo = {};
+        (rows || []).forEach(r => { byNo[r.no] = { ...r, portfolios: [] }; });
+        (portfolios || []).forEach(p => { if (byNo[p.member_no]) byNo[p.member_no].portfolios.push(p); });
+        return Object.values(byNo).map(rowToMember);
       }
-      
-      // POST /api/members - 新增成员
-      if (path === '/api/members' && method === 'POST') {
-        const members = getMembers() || [];
-        const newMember = JSON.parse(opts.body);
-        members.push(newMember);
-        saveMembers(members);
-        return newMember;
+
+      if (path === "/api/members" && method === "POST") {
+        const body = JSON.parse(opts.body);
+        const { no, name, tags, needs, services, contact } = body;
+        const { error } = await sb.from("hua_members").insert({ no, name, tags: tags || [], needs: needs || {}, services: services || [], contact: contact || {} });
+        if (error) throw new Error(error.message);
+        return body;
       }
-      
-      // PUT /api/members/:no - 更新成员
-      if (path.match(/^\/api\/members\/\w+$/) && method === 'PUT') {
-        const no = path.split('/')[3];
-        const members = getMembers() || [];
-        const index = members.findIndex(m => m.no === no);
-        if (index === -1) throw new Error('成員不存在');
-        const updateData = JSON.parse(opts.body);
-        members[index] = { ...members[index], ...updateData };
-        saveMembers(members);
-        return members[index];
+
+      if (path.match(/^\/api\/members\/[^/]+$/) && method === "PUT") {
+        const no = path.split("/")[3];
+        const body = JSON.parse(opts.body);
+        const { name, tags, needs, services, contact } = body;
+        const { error } = await sb.from("hua_members").update({ name, tags, needs, services, contact }).eq("no", no);
+        if (error) throw new Error(error.message);
+        return body;
       }
-      
-      // DELETE /api/members/:no - 删除成员
-      if (path.match(/^\/api\/members\/\w+$/) && method === 'DELETE') {
-        const no = path.split('/')[3];
-        const members = getMembers() || [];
-        const filtered = members.filter(m => m.no !== no);
-        if (filtered.length === members.length) throw new Error('成員不存在');
-        saveMembers(filtered);
+
+      if (path.match(/^\/api\/members\/[^/]+$/) && method === "DELETE") {
+        const no = path.split("/")[3];
+        const { error: e2 } = await sb.from("hua_member_portfolios").delete().eq("member_no", no);
+        if (e2) throw new Error(e2.message);
+        const { error } = await sb.from("hua_members").delete().eq("no", no);
+        if (error) throw new Error(error.message);
         return;
       }
-      
-      // 圖片上傳暫不支持（需要後端）
-      if (path.includes('/avatar') || path.includes('/portfolio')) {
-        throw new Error('圖片上傳功能需要部署完整後端。目前使用 localStorage 僅支持文字數據。');
+
+      if (path.includes("/avatar") && method === "POST") {
+        const no = path.split("/")[3];
+        const formData = opts.body;
+        const file = formData.get("image");
+        if (!file) throw new Error("請選擇圖片");
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/jpeg/, "jpg");
+        const storagePath = "avatars/" + no + "_" + Date.now() + "." + ext;
+        const { error: upErr } = await sb.storage.from(BUCKET).upload(storagePath, file, { upsert: true });
+        if (upErr) throw new Error(upErr.message);
+        const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(storagePath);
+        const url = urlData?.publicUrl || "";
+        const { error } = await sb.from("hua_members").update({ avatar: url }).eq("no", no);
+        if (error) throw new Error(error.message);
+        return { avatar: url };
       }
-      
-      throw new Error('不支持的 API 路徑');
+
+      if (path.includes("/avatar") && method === "DELETE") {
+        const no = path.split("/")[3];
+        const { error } = await sb.from("hua_members").update({ avatar: null }).eq("no", no);
+        if (error) throw new Error(error.message);
+        return;
+      }
+
+      if (path.includes("/portfolio") && method === "POST") {
+        const no = path.split("/")[3];
+        const formData = opts.body;
+        const file = formData.get("image");
+        if (!file) throw new Error("請選擇圖片");
+        const title = formData.get("title") || "";
+        const description = formData.get("description") || "";
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/jpeg/, "jpg");
+        const storagePath = "portfolio/" + no + "/" + Date.now() + "." + ext;
+        const { error: upErr } = await sb.storage.from(BUCKET).upload(storagePath, file, { upsert: true });
+        if (upErr) throw new Error(upErr.message);
+        const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(storagePath);
+        const image = urlData?.publicUrl || "";
+        const { data: inserted, error } = await sb.from("hua_member_portfolios").insert({ member_no: no, title, description, image }).select().single();
+        if (error) throw new Error(error.message);
+        return inserted;
+      }
+
+      if (path.match(/\/portfolio\/[^/]+$/) && method === "DELETE") {
+        const parts = path.split("/");
+        const id = parts[parts.length - 1];
+        const { error } = await sb.from("hua_member_portfolios").delete().eq("id", id);
+        if (error) throw new Error(error.message);
+        return;
+      }
+
+      throw new Error("不支持的 API 路徑");
     }
 
     function portfolioImageUrl(img) {
       if (!img) return "";
       if (img.startsWith("http") || img.startsWith("data:")) return img;
+      if (img.startsWith("/api/")) return "";
       return (API || "") + (img.startsWith("/") ? img : "/" + img);
     }
 
@@ -268,8 +310,9 @@ const API = "";
         `).join("")}</div>`
         : `<p style="color:var(--muted);font-size:0.9rem;">尚無作品</p>`;
       const avatar = m.avatar || null;
-      const avatarHtml = avatar
-        ? `<div class="avatar-current"><img src="${portfolioImageUrl(avatar)}" alt="形象照" /></div>`
+      const avatarSrc = portfolioImageUrl(avatar);
+      const avatarHtml = avatarSrc
+        ? `<div class="avatar-current"><img src="${avatarSrc}" alt="形象照" /></div>`
         : `<div class="avatar-current"><span class="none">尚無形象照</span></div>`;
       const c = m.contact || {};
       const editFormHtml = `
@@ -389,13 +432,11 @@ const API = "";
           return;
         }
         try {
-          const res = await fetch((API || "") + "/api/members", {
+          await api("/api/members", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ no, name, tags, needs, services, contact: Object.keys(contact).length ? contact : undefined }),
           });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(data.error || res.statusText);
           okEl.textContent = "已新增成員 " + name;
           okEl.style.display = "block";
           document.getElementById("new-no").value = "";
@@ -441,11 +482,7 @@ const API = "";
           try {
             const form = new FormData();
             form.append("image", file);
-            const res = await fetch((API || "") + `/api/members/${no}/avatar`, { method: "POST", body: form });
-            if (!res.ok) {
-              const j = await res.json().catch(() => ({}));
-              throw new Error(j.error || res.statusText);
-            }
+            await api(`/api/members/${no}/avatar`, { method: "POST", body: form });
             fileInput.value = "";
             setTimeout(() => load(), 1200);
           } catch (e) {
@@ -496,11 +533,7 @@ const API = "";
             form.append("image", file);
             if (title) form.append("title", title);
             if (desc) form.append("description", desc);
-            const res = await fetch((API || "") + `/api/members/${no}/portfolio`, { method: "POST", body: form });
-            if (!res.ok) {
-              const j = await res.json().catch(() => ({}));
-              throw new Error(j.error || res.statusText);
-            }
+            await api(`/api/members/${no}/portfolio`, { method: "POST", body: form });
             member.querySelector("[data-add-img]").value = "";
             member.querySelector("[data-add-title]").value = "";
             member.querySelector("[data-add-desc]").value = "";

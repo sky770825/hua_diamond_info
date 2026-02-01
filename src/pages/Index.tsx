@@ -34,11 +34,6 @@ const SORT_OPTIONS: { value: MemberSortBy; label: string }[] = [
 
 const SKELETON_COUNT = 6;
 
-// 管理後台網址：生產設 ADMIN_URL；開發時用 localhost:3001
-const ADMIN_URL =
-  import.meta.env.ADMIN_URL ||
-  (import.meta.env.DEV ? "http://localhost:3001" : "");
-
 const Index = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -262,11 +257,6 @@ const Index = () => {
             <p className="text-sm sm:text-base text-muted-foreground max-w-[65ch] mb-4">
               成員資料由後台維護，請至管理後台新增成員後再瀏覽。
             </p>
-            <Button asChild variant="outline" className="min-h-[48px] px-6">
-              <a href={ADMIN_URL ? `${ADMIN_URL}/admin` : "/admin"} {...(ADMIN_URL ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-                開啟管理後台
-              </a>
-            </Button>
           </div>
         ) : showSkeleton ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
@@ -326,15 +316,8 @@ const Index = () => {
 
       <footer className="border-t border-border bg-secondary/20 no-print">
         <div className="container py-4 sm:py-6">
-          <div className="text-center text-sm text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+          <div className="text-center text-sm text-muted-foreground">
             <span>2026 華地產鑽石分會資訊組 蔡濬瑒製</span>
-            <a
-              href={ADMIN_URL ? `${ADMIN_URL}/admin` : "/admin"}
-              {...(ADMIN_URL ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="text-primary hover:underline"
-            >
-              管理後台
-            </a>
           </div>
         </div>
       </footer>

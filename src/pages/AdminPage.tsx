@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchMembers } from "@/api/members";
 import type { Member } from "@/data/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -10,6 +11,7 @@ const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "";
 const IS_DEV = import.meta.env.DEV;
 
 const AdminPage = () => {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,9 +45,14 @@ const AdminPage = () => {
         <div className="container py-4">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl font-bold">管理後台（唯讀預覽）</h1>
-            <a href="/" className="text-sm text-primary hover:underline">
-              ← 回成員牆
-            </a>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate("/admin/edit")}>
+                → 編輯模式
+              </Button>
+              <a href="/" className="text-sm text-primary hover:underline">
+                ← 回成員牆
+              </a>
+            </div>
           </div>
         </div>
       </header>

@@ -166,15 +166,15 @@ const AdminEditPage = () => {
                   <Input id="tags" name="tags" placeholder="例：廣告投放,行銷策略" />
                 </div>
                 <div>
-                  <Label htmlFor="general">引薦需求（一般）</Label>
+                  <Label htmlFor="general">一般需求</Label>
                   <Textarea id="general" name="general" />
                 </div>
                 <div>
-                  <Label htmlFor="ideal">引薦需求（理想）</Label>
+                  <Label htmlFor="ideal">理想需求</Label>
                   <Textarea id="ideal" name="ideal" />
                 </div>
                 <div>
-                  <Label htmlFor="dream">引薦需求（夢想）</Label>
+                  <Label htmlFor="dream">夢幻需求</Label>
                   <Textarea id="dream" name="dream" />
                 </div>
                 <div>

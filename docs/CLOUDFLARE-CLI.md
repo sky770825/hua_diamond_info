@@ -4,6 +4,19 @@
 
 ---
 
+## 首次部署必讀（專案尚未建立時）
+
+Cloudflare Pages **專案必須先存在**，`npm run deploy` 或 GitHub Actions 才會成功。Wrangler 無法在無互動環境（如 CI）自動建立專案，請在本機做一次以下任一方式：
+
+| 方式 | 作法 |
+|------|------|
+| **A. 先建立專案** | 執行 `npx wrangler login` 後，執行 `npx wrangler pages project create`，依提示輸入 **Project name:** `hua-diamond-info`、**Production branch:** `main`。 |
+| **B. 用 deploy 建立** | 執行 `npx wrangler login` 後，執行 `npm run deploy`；若出現「Project not found... Would you like to create it?」，選擇 **Create a new project**，專案名稱會用 `wrangler.toml` 的 `hua-diamond-info`。 |
+
+完成任一步驟後，之後在本機執行 `npm run deploy` 或透過 GitHub Actions 推送都會正常部署。
+
+---
+
 ## 一、前置（只需做一次）
 
 ### 1. 登入 Cloudflare
@@ -16,7 +29,7 @@ npx wrangler login
 
 ### 2. 建立 Pages 專案（首次部署時）
 
-第一次部署時，若尚未建立專案，執行 deploy 時會提示輸入 **project name** 與 **production branch**，或可先手動建立：
+若尚未建立專案，可先手動建立（見上方「首次部署必讀」），或執行：
 
 ```bash
 npx wrangler pages project create

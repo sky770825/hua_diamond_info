@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 // 完整管理後台網址：生產環境設 ADMIN_URL；開發時用 localhost
-const ADMIN_URL = import.meta.env.ADMIN_URL || "";
+const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "";
 const IS_DEV = import.meta.env.DEV;
 
 const AdminPage = () => {

@@ -31,3 +31,4 @@ backend/uploads
 
 # 使用 npm 鎖檔，避免 Cloudflare Pages 偵測到 bun.lockb 導致 lockfile 解析失敗
 bun.lockb
+.vercel

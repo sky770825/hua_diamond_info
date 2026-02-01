@@ -35,20 +35,18 @@ function rowToMember(row: {
 
 export async function fetchMembers(): Promise<Member[]> {
   if (USE_SUPABASE && supabase) {
-    const { data: rows, error } = await (supabase as any)
-      .from("hua_members")
-      .select("*")
-      .order("no");
-    if (error) throw new Error(error.message);
-    const { data: portfolios } = await (supabase as any)
-      .from("hua_member_portfolios")
-      .select("*")
-      .order("sort_order");
+    const [membersRes, portfoliosRes] = await Promise.all([
+      (supabase as any).from("hua_members").select("*").order("no"),
+      (supabase as any).from("hua_member_portfolios").select("*").order("sort_order"),
+    ]);
+    if (membersRes.error) throw new Error(membersRes.error.message);
+    const rows = membersRes.data ?? [];
+    const portfolios = portfoliosRes.data ?? [];
     const byNo: Record<string, any> = {};
-    (rows || []).forEach((r: any) => {
+    rows.forEach((r: any) => {
       byNo[r.no] = { ...r, portfolios: [] };
     });
-    (portfolios || []).forEach((p: any) => {
+    portfolios.forEach((p: any) => {
       if (byNo[p.member_no]) byNo[p.member_no].portfolios.push(p);
     });
     return Object.values(byNo).map((r) => rowToMember(r));

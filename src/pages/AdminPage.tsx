@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const ADMIN_URL =
-  import.meta.env.VITE_ADMIN_URL ||
-  (import.meta.env.DEV ? "http://localhost:3001" : "");
+// 完整管理後台網址：生產環境必須設 VITE_ADMIN_URL；開發時用 localhost
+const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "";
+const IS_DEV = import.meta.env.DEV;
 
 const AdminPage = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -53,19 +53,39 @@ const AdminPage = () => {
         <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground">
           <p className="mb-2">
             <strong className="text-foreground">此為唯讀預覽</strong>
-            ，僅顯示成員資料。若要新增、編輯、刪除成員，請啟動後端：
+            ，僅顯示成員資料。
           </p>
-          <code className="block rounded bg-secondary/50 p-2 text-xs">
-            npm run dev:backend
-          </code>
-          <a
-            href="http://localhost:3001/admin"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-primary hover:underline"
-          >
-            → 開啟完整管理後台（http://localhost:3001/admin）
-          </a>
+          {ADMIN_URL ? (
+            <a
+              href={`${ADMIN_URL}/admin`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-primary hover:underline"
+            >
+              → 開啟完整管理後台（新增／編輯／刪除）
+            </a>
+          ) : IS_DEV ? (
+            <>
+              <p className="mb-2">本機開發：啟動後端後可開啟完整管理後台。</p>
+              <code className="block rounded bg-secondary/50 p-2 text-xs mb-2">
+                npm run dev:backend
+              </code>
+              <a
+                href="http://localhost:3001/admin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-primary hover:underline"
+              >
+                → 開啟完整管理後台（http://localhost:3001/admin）
+              </a>
+            </>
+          ) : (
+            <p className="mt-2">
+              完整編輯功能需將後端部署至 Zeabur 等服務，並在 Cloudflare Pages 設定{" "}
+              <code className="rounded bg-secondary/50 px-1">VITE_ADMIN_URL</code>。
+              詳見 docs/完整管理後台部署說明.md。
+            </p>
+          )}
         </div>
 
         {loading ? (

@@ -34,7 +34,7 @@ const SORT_OPTIONS: { value: MemberSortBy; label: string }[] = [
 
 const SKELETON_COUNT = 6;
 
-// 管理後台網址：VITE_ADMIN_URL 有設定則用；開發時用 localhost:3001
+// 管理後台網址：生產必須設 VITE_ADMIN_URL；開發時用 localhost:3001
 const ADMIN_URL =
   import.meta.env.VITE_ADMIN_URL ||
   (import.meta.env.DEV ? "http://localhost:3001" : "");

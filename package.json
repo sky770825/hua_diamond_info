@@ -13,6 +13,7 @@
     "deploy:vercel": "npm run build && vercel --prod",
     "deploy": "npm run deploy:pages",
     "lint": "eslint .",
+    "ci": "npm run lint && npm run test && npm run build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

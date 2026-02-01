@@ -1,15 +1,16 @@
-# Push 到 main 時驗證建置成功
-# 實際部署由 Cloudflare Pages 的 Git 整合自動處理（專案已連接 sky770825/hua_diamond_info）
-# 若需本機手動部署：npm run deploy（需先 npx wrangler login）
+# Push / PR 時自動：lint → test → build
+# 部署由 Git 整合自動處理：Cloudflare Pages / Vercel 連接 repo 後會自動 deploy
 
-name: Build Check
+name: CI
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,11 +25,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
       - name: Build
         run: npm run build
         env:
-          # 支援 API_URL / ADMIN_URL 或 VITE_*（舊版相容）
           API_URL: ${{ secrets.API_URL }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           ADMIN_URL: ${{ secrets.ADMIN_URL }}
           VITE_ADMIN_URL: ${{ secrets.VITE_ADMIN_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}

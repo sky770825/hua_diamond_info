@@ -22,10 +22,8 @@ const AdminPage = () => {
       window.location.href = `${ADMIN_URL}/admin`;
       return;
     }
-    fetchMembers()
-      .then(setMembers)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false));
+    // 重定向到完整的 HTML 管理後台
+    window.location.href = "/admin-full.html";
   }, []);
 
   // 有後端網址時顯示轉向中

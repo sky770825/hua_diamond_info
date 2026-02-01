@@ -174,6 +174,18 @@
 
         const BUCKET = "hua-diamond-images";
 
+    /** 確保 Storage URL 為公開路徑（/object/public/），避免 504／403 */
+    function ensurePublicStorageUrl(url) {
+      if (!url || typeof url !== "string") return "";
+      const u = url.trim();
+      if (!u) return "";
+      if (u.includes("/object/public/")) return u;
+      if (u.includes("/storage/v1/object/") && !u.includes("/object/public/")) {
+        return u.replace("/storage/v1/object/", "/storage/v1/object/public/");
+      }
+      return u;
+    }
+
     function sortByNo(list) {
       return list.slice().sort((a, b) => String(a.no).localeCompare(String(b.no), undefined, { numeric: true }));
     }
@@ -254,7 +266,7 @@
         const { error: upErr } = await sb.storage.from(BUCKET).upload(storagePath, file, { upsert: true });
         if (upErr) throw new Error(upErr.message);
         const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(storagePath);
-        const url = urlData?.publicUrl || "";
+        const url = ensurePublicStorageUrl(urlData?.publicUrl || "");
         const { error } = await sb.from("hua_members").update({ avatar: url }).eq("no", no);
         if (error) throw new Error(error.message);
         return { avatar: url };
@@ -270,18 +282,20 @@
       if (path.includes("/portfolio") && method === "POST") {
         const no = path.split("/")[3];
         const formData = opts.body;
+        if (!formData || typeof formData.get !== "function") throw new Error("表單資料無效");
         const file = formData.get("image");
-        if (!file) throw new Error("請選擇圖片");
+        if (!file || !(file instanceof File)) throw new Error("請選擇圖片檔案");
         const title = formData.get("title") || "";
         const description = formData.get("description") || "";
         const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/jpeg/, "jpg");
         const storagePath = "portfolio/" + no + "/" + Date.now() + "." + ext;
-        const { error: upErr } = await sb.storage.from(BUCKET).upload(storagePath, file, { upsert: true });
-        if (upErr) throw new Error(upErr.message);
+        const contentType = file.type || (ext === "png" ? "image/png" : "image/jpeg");
+        const { error: upErr } = await sb.storage.from(BUCKET).upload(storagePath, file, { upsert: true, contentType });
+        if (upErr) throw new Error("作品圖片上傳失敗：" + (upErr.message || String(upErr)));
         const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(storagePath);
-        const image = urlData?.publicUrl || "";
-        const { data: inserted, error } = await sb.from("hua_member_portfolios").insert({ member_no: no, title, description, image }).select().single();
-        if (error) throw new Error(error.message);
+        const image = ensurePublicStorageUrl(urlData?.publicUrl || "");
+        const { data: inserted, error } = await sb.from("hua_member_portfolios").insert({ member_no: no, title, description, image, sort_order: 0 }).select().single();
+        if (error) throw new Error("新增作品紀錄失敗：" + (error.message || String(error)));
         return inserted;
       }
 
@@ -298,8 +312,8 @@
 
     function portfolioImageUrl(img) {
       if (!img) return "";
-      if (img.startsWith("http") || img.startsWith("data:")) return img;
       if (img.startsWith("/api/")) return "";
+      if (img.startsWith("http") || img.startsWith("data:")) return ensurePublicStorageUrl(img);
       return "";
     }
 

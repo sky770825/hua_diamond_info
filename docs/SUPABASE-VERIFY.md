@@ -63,3 +63,38 @@
 - 管理後台為靜態 HTML，Supabase URL/Key 寫在 `admin-full.html` 內（或由 `window.__SUPABASE_URL__` / `__SUPABASE_ANON_KEY__` 覆寫）。
 
 完成以上三項自測即代表：**資料修改與儲存有同步、照片有存到資料庫、刪除功能齊全。**
+
+---
+
+## 前後端 Supabase 同步驗證（實測）
+
+**資料來源**：前端（React `fetchMembers()`）、後台（admin-full.html）皆直接讀寫同一個 Supabase 專案的 `hua_members`、`hua_member_portfolios`，無需經過後端 API，因此只要使用同一組 URL / anon key 即同步。
+
+**欄位對應**（與前端 `src/api/members.ts` 一致）：
+
+| 表 | 欄位 | 前端 / 後台用途 |
+|----|------|----------------|
+| hua_members | no, name, avatar, tags, needs (jsonb), services, contact (jsonb) | 成員基本資料、形象照 URL、引薦需求、服務、聯絡方式 |
+| hua_member_portfolios | id, member_no, title, description, image, sort_order | 作品集：標題、描述、圖片 URL、排序 |
+
+**驗證腳本**：可執行以下指令，用與前端相同的邏輯讀取 Supabase，確認成員數、形象照與作品數與預期一致。
+
+```bash
+node scripts/verify-supabase-sync.mjs
+```
+
+或使用環境變數（需先有 `.env` 或 `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY`）：
+
+```bash
+node --env-file=.env scripts/verify-supabase-sync.mjs
+```
+
+腳本會輸出：
+- 成員列表（NO、姓名、形象照有無、作品數）
+- avatar URL 是否含 `/object/public/`（前端需此格式才能正常顯示）
+- 兩表欄位是否與前端預期一致
+
+**確保同步的要點**：
+1. 前端建置／執行時必須設定 `VITE_SUPABASE_URL`、`VITE_SUPABASE_PUBLISHABLE_KEY`（與後台同專案）。
+2. 後台使用 **admin-full.html**（或同頁內寫入的 `window.__SUPABASE_URL__` / `__SUPABASE_ANON_KEY__`）指向同一 Supabase 專案。
+3. 形象照／作品圖存進 DB 的 URL 需為 Supabase 公開 URL（含 `/object/public/`）；前端 `portfolioImageUrl()` 會自動補正舊格式。

@@ -16,7 +16,8 @@
     "ci": "npm run lint && npm run test && npm run build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify:supabase": "node scripts/verify-supabase-sync.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

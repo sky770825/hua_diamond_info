@@ -46,7 +46,7 @@ const MemberDetailDialog = ({ member, open, onOpenChange, onShare }: MemberDetai
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-popover border-border max-h-[80vh] xs:max-h-[85vh] overflow-y-auto rounded-xl no-print">
+      <DialogContent aria-describedby={undefined} className="max-w-[calc(100vw-2rem)] sm:max-w-2xl bg-popover border-border max-h-[80vh] xs:max-h-[85vh] overflow-y-auto rounded-xl no-print">
         <DialogHeader className="pb-4 border-b border-border">
           <div className="flex gap-4 items-start">
             <Avatar className="h-20 w-20 shrink-0 rounded-xl border border-border">
@@ -199,7 +199,7 @@ const MemberDetailDialog = ({ member, open, onOpenChange, onShare }: MemberDetai
 
       {/* 作品集圖片放大（lightbox） */}
       <Dialog open={lightbox !== null} onOpenChange={(open) => !open && setLightbox(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-3 p-3 sm:p-4 bg-black/95 border-border">
+        <DialogContent aria-describedby={undefined} className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-3 p-3 sm:p-4 bg-black/95 border-border">
           {lightbox && (
             <>
               <div className="flex-1 min-h-0 flex items-center justify-center">

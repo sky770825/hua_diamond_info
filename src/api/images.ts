@@ -1,9 +1,10 @@
 import { apiUrl } from "./client";
 
-const SUPABASE_URL =
-  typeof import.meta.env.VITE_SUPABASE_URL === "string" && import.meta.env.VITE_SUPABASE_URL.length > 0
-    ? String(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, "")
-    : "";
+// 與 supabase client 同專案，未設 env 時用 fallback，形象照／作品圖才能正確顯示
+const SUPABASE_URL = (
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://cnzqtuuegdqwkgvletaa.supabase.co"
+).replace(/\/$/, "");
 
 /** 確保 Supabase Storage URL 為公開路徑（/object/public/），避免 504／403 */
 function ensurePublicStorageUrl(url: string): string {

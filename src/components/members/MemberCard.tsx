@@ -1,6 +1,8 @@
+import { useState } from "react";
 import type { Member } from "@/data/types";
 import { portfolioImageUrl } from "@/api/images";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Lightbulb, Wrench, ImagePlus } from "lucide-react";
 
 interface MemberCardProps {
@@ -20,6 +22,9 @@ function initials(name: string): string {
 }
 
 const MemberCard = ({ member, onClick, onTagClick }: MemberCardProps) => {
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false);
+  const avatarUrl = member.avatar ? portfolioImageUrl(member.avatar) : "";
+
   return (
     <article
       onClick={onClick}
@@ -33,20 +38,45 @@ const MemberCard = ({ member, onClick, onTagClick }: MemberCardProps) => {
         }
       }}
     >
-      {/* 形象照橫幅：卡片寬 4:3，放大且為視覺焦點 */}
-      <div className="relative w-full aspect-[4/3] overflow-hidden bg-secondary shrink-0">
+      {/* 形象照：手機 3:4 較短、平板以上 9:16，完整顯示，點擊可看原圖 */}
+      <div className="relative w-full aspect-[3/4] sm:aspect-[9/16] overflow-hidden bg-secondary shrink-0 flex items-center justify-center">
         {member.avatar ? (
-          <img
-            src={portfolioImageUrl(member.avatar)}
-            alt={member.name}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAvatarLightboxOpen(true);
+            }}
+            className="absolute inset-0 w-full h-full flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-none cursor-zoom-in"
+            aria-label={`查看 ${member.name} 形象照原圖`}
+          >
+            <img
+              src={avatarUrl}
+              alt={member.name}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+            />
+          </button>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/80 text-2xl font-semibold bg-gradient-to-br from-secondary to-secondary/70">
             {initials(member.name)}
           </div>
         )}
       </div>
+
+      {/* 點擊形象照後：原圖 lightbox */}
+      <Dialog open={avatarLightboxOpen} onOpenChange={setAvatarLightboxOpen}>
+        <DialogContent aria-describedby={undefined} className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] flex flex-col gap-3 p-3 sm:p-4 bg-black/95 border-border">
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            <img
+              src={avatarUrl}
+              alt={`${member.name} 形象照`}
+              className="max-w-full max-h-[75vh] w-auto h-auto object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <p className="text-center text-sm text-muted-foreground">{member.name}</p>
+        </DialogContent>
+      </Dialog>
 
       <div className="p-4 sm:p-5 flex flex-col flex-1 min-w-0">
         <header className="mb-2 sm:mb-3">

@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const MemberCardSkeleton = () => (
   <div className="rounded-xl overflow-hidden border border-border/50 bg-card/80 flex flex-col">
-    <Skeleton className="w-full aspect-[4/3] shrink-0 rounded-none" />
+    <Skeleton className="w-full aspect-[3/4] sm:aspect-[9/16] shrink-0 rounded-none" />
     <div className="p-4 sm:p-5 flex flex-col flex-1 gap-3">
       <div className="flex flex-col gap-1.5">
         <Skeleton className="h-3 w-12" />

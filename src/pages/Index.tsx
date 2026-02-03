@@ -131,7 +131,7 @@ const Index = () => {
         跳到主內容
       </a>
       <header className="relative border-b border-border bg-gradient-to-b from-secondary/30 to-background">
-        <div className="container py-8 sm:py-10 md:py-12 lg:py-16">
+        <div className="container px-4 sm:px-6 py-8 sm:py-10 md:py-12 lg:py-16">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 sm:gap-8">
             <div className="min-w-0">
               <h1 className="text-3xl xs:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 leading-tight flex items-center gap-2 flex-wrap">
@@ -176,7 +176,7 @@ const Index = () => {
       </header>
 
       <section className="border-b border-border bg-secondary/20 no-print" role="search" aria-label="篩選成員">
-        <div className="container py-2 sm:py-3">
+        <div className="container px-4 sm:px-6 py-2 sm:py-3">
           <Collapsible open={filterExpanded} onOpenChange={setFilterExpanded}>
             <CollapsibleTrigger asChild>
               <button
@@ -247,7 +247,7 @@ const Index = () => {
         </div>
       </section>
 
-      <main id="main-content" className="container py-6 sm:py-8 md:py-10 lg:py-12" tabIndex={-1}>
+      <main id="main-content" className="container px-4 sm:px-6 py-6 sm:py-8 md:py-10 lg:py-12" tabIndex={-1}>
         {showEmptyMembers ? (
           <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center px-4">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
@@ -259,7 +259,7 @@ const Index = () => {
             </p>
           </div>
         ) : showSkeleton ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
             {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
               <MemberCardSkeleton key={i} />
             ))}
@@ -300,7 +300,7 @@ const Index = () => {
               </Select>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-5 md:gap-6">
               {sortedMembers.map((member) => (
                 <MemberCard
                   key={member.no}
@@ -315,7 +315,7 @@ const Index = () => {
       </main>
 
       <footer className="border-t border-border bg-secondary/20 no-print">
-        <div className="container py-4 sm:py-6">
+        <div className="container px-4 sm:px-6 py-4 sm:py-6">
           <div className="text-center text-sm text-muted-foreground">
             <span>2026 華地產鑽石分會資訊組 蔡濬瑒製</span>
           </div>
